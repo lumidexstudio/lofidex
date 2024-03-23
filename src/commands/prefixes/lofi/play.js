@@ -1,4 +1,28 @@
-const { joinVoiceChannel, VoiceConnectionStatus, entersState } = require('@discordjs/voice');
+const { joinVoiceChannel, VoiceConnectionStatus, entersState, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
+
+async function genMusic(message, player) {
+    let list = require('../../../lofi');
+    let checkNow = await message.client.db.has(`vc.${message.guild.id}.now`);
+
+    if(!checkNow) {
+        const song = list[0];
+        const res = createAudioResource(song.path, {
+            metadata: { title: song.title, author: song.author, source: song.source }
+        });
+
+        player.play(res);
+        await message.client.db.set(`vc.${message.guild.id}.now`, 0);
+    } else {
+        let now = await message.client.db.get(`vc.${message.guild.id}.now`);
+        let song = list[now+1];
+        const res = createAudioResource(song.path, {
+            metadata: { title: song.title, author: song.author, source: song.source }
+        });
+
+        player.play(res);
+        await message.client.db.set(`vc.${message.guild.id}.now`, now+1);
+    }
+}
 
 module.exports = {
     name: "play",
@@ -23,6 +47,26 @@ module.exports = {
         connection.on(VoiceConnectionStatus.Ready, () => {
             message.client.db.set(`vc.${message.guild.id}`, { channel: voiceChannel.id, master: message.member.user.id })
             console.log("bot connected - ready to play");
+            
+            const player = createAudioPlayer();
+            connection.subscribe(player)
+            genMusic(message, player, connection);
+
+            player.on(AudioPlayerStatus.Buffering, () => {
+                message.reply("buffering")
+            })
+
+            player.on(AudioPlayerStatus.Playing, () => {
+                message.reply('playing...')
+            })
+
+            player.on('error', error => {
+                console.error(error);
+            });
+
+            player.on(AudioPlayerStatus.Idle, () => {
+                genMusic(message, player, connection)
+            });
         });
 
         connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
