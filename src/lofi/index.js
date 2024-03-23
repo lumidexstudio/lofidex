@@ -10,7 +10,7 @@ module.exports = [
     },
     { 
         id: 2,
-        title: "Chill Lofi Hiphop - ‘Tears’ by Envy",
+        title: "Chill Lofi Hiphop - ‘Tears’",
         author: 'Envy',
         source: 'https://soundcloud.com/nocopyrightlofi/no-copyright-chill-lofi-3',
         path: path.join(__dirname, '2.mp3')
