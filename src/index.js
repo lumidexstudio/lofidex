@@ -3,6 +3,7 @@ const path = require("node:path");
 const walk = require('./lib/walk');
 
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
+const { QuickDB } = require("quick.db");
 const express = require("express");
 const app = express();
 
@@ -11,6 +12,7 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates,
   ],
 });
 
@@ -18,6 +20,7 @@ client.config = require("../config");
 client.slash = new Collection();
 client.prefixes = new Collection();
 client.cooldowns = new Collection();
+client.db = new QuickDB();
 
 const slashPath = path.join(__dirname, "commands/slash");
 walk(slashPath, (x) => {
