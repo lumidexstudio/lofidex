@@ -12,6 +12,7 @@ async function genMusic(message, player) {
 
         player.play(res);
         await message.client.db.set(`vc.${message.guild.id}.now`, 0);
+        message.reply(`now playing: ${res.metadata.title} by ${res.metadata.author}`);
     } else {
         let now = await message.client.db.get(`vc.${message.guild.id}.now`);
         let song = list[now+1];
@@ -21,6 +22,7 @@ async function genMusic(message, player) {
 
         player.play(res);
         await message.client.db.set(`vc.${message.guild.id}.now`, now+1);
+        message.reply(`now playing: ${res.metadata.title} by ${res.metadata.author}`);
     }
 }
 
