@@ -21,7 +21,7 @@ module.exports = {
         });
 
         connection.on(VoiceConnectionStatus.Ready, () => {
-            message.client.db.set(`vc.${message.guild.id}.id`, voiceChannel.id)
+            message.client.db.set(`vc.${message.guild.id}`, { channel: voiceChannel.id, master: message.member.user.id })
             console.log("bot connected - ready to play");
         });
 
