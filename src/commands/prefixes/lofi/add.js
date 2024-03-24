@@ -37,6 +37,7 @@ const addAmbient = async (message, con, argsAmbient) => {
 
   // Tentukan titik waktu mulai mixing
   const startOffset = getCurrentlyPlayingTime(con);
+  con.state.subscription.player.pause()
 
   message.reply(`adding rains on playback ${startOffset} seconds`);
 
