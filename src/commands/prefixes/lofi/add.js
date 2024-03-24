@@ -32,14 +32,14 @@ const addAmbient = async (message, con, argsAmbient) => {
 
   // Mendapatkan lagu yang sedang diputar
   let checkNow = await message.client.db.has(`vc.${message.guild.id}.now`);
-  let song = list[0];
+  let song = list[con.state.subscription.player.state.resource.metadata.index];
 
   // Tentukan titik waktu mulai mixing
   const startOffset = getCurrentlyPlayingTime(con);
   if (!startOffset) return message.reply("No song were played!");
   con.state.subscription.player.pause();
 
-  message.reply(`adding rains on playback ${startOffset} seconds`);
+  message.reply(`adding ${argsAmbient} on playback ${startOffset} seconds`);
 
   // Lakukan pemotongan audio lagu dari titik waktu yang ditentukan
   ffmpeg(song.path)
@@ -60,7 +60,11 @@ const addAmbient = async (message, con, argsAmbient) => {
         .output("tersimpan.mp3")
         .on("end", () => {
           // Setelah mixing selesai, putar hasil mixing
-          const res = createAudioResource("tersimpan.mp3", { inputType: StreamType.Raw, inlineVolume: true });
+          const res = createAudioResource("tersimpan.mp3", {
+            inputType: StreamType.Raw,
+            inlineVolume: true,
+            metadata: { title: song.title, author: song.author, source: song.source, index: list.findIndex((item) => item.title == song.title) },
+          });
           con.state.subscription.player.play(res);
         })
         .run();
