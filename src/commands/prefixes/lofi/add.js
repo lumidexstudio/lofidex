@@ -44,6 +44,7 @@ const addAmbient = async (message, con, argsAmbient) => {
   // Lakukan pemotongan audio lagu dari titik waktu yang ditentukan
   ffmpeg(song.path)
     .setStartTime(startOffset)
+    .outputOptions('-preset', 'fast')
     .output(`temp/${song.title}-cut.mp3`)
     .on("end", () => {
       // Setelah selesai memotong, mix audio dengan ambient sound
@@ -55,6 +56,7 @@ const addAmbient = async (message, con, argsAmbient) => {
           "[1:a]volume=0.7[a1]", // Atur volume ambient
           "[a0][a1]amix=inputs=2:duration=longest", // Mix kedua audio
         ])
+        .outputOptions('-preset', 'fast')
         .output("tersimpan.mp3")
         .on("end", () => {
           // Setelah mixing selesai, putar hasil mixing
