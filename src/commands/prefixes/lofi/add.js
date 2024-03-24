@@ -66,10 +66,10 @@ const addAmbient = async (message, con, argsAmbient) => {
         .input(ambient.path)
         .complexFilter(filtergraph)
         .outputOptions("-preset", "fast")
-        .output("tersimpan.mp3")
+        .output(`temp/tersimpan-${message.guild.id}.mp3`)
         .on("end", () => {
           // Setelah mixing selesai, putar hasil mixing
-          const res = createAudioResource("tersimpan.mp3", {
+          const res = createAudioResource(`temp/tersimpan-${message.guild.id}.mp3`, {
             inputType: StreamType.Raw,
             inlineVolume: true,
             metadata: { title: song.title, author: song.author, source: song.source, index: list.findIndex((item) => item.title == song.title) },
