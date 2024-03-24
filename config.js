@@ -5,5 +5,5 @@ module.exports = {
   token: process.env.TOKEN,
   clientID: process.env.CLIENT_ID,
   ownerID: process.env.OWNER_ID.split(", "),
-  prefix: ["lumi", "lumi "],
+  prefix: ["lumi", "lumi ", "ldx", "ldx "],
 };
