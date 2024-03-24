@@ -8,6 +8,7 @@ async function genMusic(message, player) {
     const song = list[Math.floor(Math.random() * list.length)];
     const res = createAudioResource(song.path, {
       metadata: { title: song.title, author: song.author, source: song.source },
+      inlineVolume: true
     });
 
     player.play(res);
@@ -20,6 +21,7 @@ async function genMusic(message, player) {
     if (!song) song = list[0];
     const res = createAudioResource(song.path, {
       metadata: { title: song.title, author: song.author, source: song.source },
+      inlineVolume: true
     });
 
     player.play(res);
