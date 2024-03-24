@@ -39,7 +39,7 @@ const addAmbient = async (message, con, argsAmbient) => {
   if (!startOffset) return message.reply("No song were played!");
   con.state.subscription.player.pause();
 
-  message.reply(`adding rains on playback ${startOffset} seconds`);
+  message.reply(`adding ${argsAmbient} on playback ${startOffset} seconds`);
 
   // Lakukan pemotongan audio lagu dari titik waktu yang ditentukan
   ffmpeg(song.path)
