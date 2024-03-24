@@ -46,6 +46,14 @@ const addAmbient = async (message, con, argsAmbient) => {
   let ambientdur = await getAudioDurationInSeconds(ambient.path)
   let loops = Math.ceil(songdur / ambientdur); // Jumlah loop
 
+  let filtergraph = [
+    "[0:a]volume=1[a0]", // Atur volume lagu
+    "[1:a]volume=0.5[a1]", // Atur volume ambient
+    "[1:a]aloop=loop="+loops+":size=1e6[a2]", // Loop ambient
+    "[a2]apad=whole_dur=10000,atrim=0:duration="+songdur+"[a3]", // biar smooth loopingannya
+    "[a0][a1][a3]amix=inputs=3:duration=longest" // Mix ambient + lagu utama
+  ];
+
   // Lakukan pemotongan audio lagu dari titik waktu yang ditentukan
   ffmpeg(song.path)
     .setStartTime(startOffset)
@@ -56,12 +64,7 @@ const addAmbient = async (message, con, argsAmbient) => {
       ffmpeg()
         .input(`temp/${song.title}-cut.mp3`)
         .input(ambient.path)
-        .complexFilter([
-            "[0:a]volume=1[a0]", // Atur volume lagu
-            "[1:a]volume=0.5[a1]", // Atur volume ambient
-            "[1:a]aloop=loop="+loops+":size=1e6[a2]", // loop ambient
-            "[a0][a1][a2]amix=inputs=3:duration=longest" // mix ambient + lagu utama
-        ])
+        .complexFilter(filtergraph)
         .outputOptions("-preset", "fast")
         .output("tersimpan.mp3")
         .on("end", () => {
