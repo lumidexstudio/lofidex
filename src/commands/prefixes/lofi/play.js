@@ -51,7 +51,7 @@ module.exports = {
     });
 
     connection.on(VoiceConnectionStatus.Ready, () => {
-      message.client.db.set(`vc.${message.guild.id}`, { channel: voiceChannel.id, master: message.member.user.id });
+      message.client.db.set(`vc.${message.guild.id}`, { channel: voiceChannel.id, master: message.member.user.id, ambients: [], filtergraph: ["[0:a]volume=1[a0]"], filtergraph_last: 0, filtergraph_mix: '', filtergraph_mix_count: 1 });
       console.log("bot connected - ready to play");
 
       const player = createAudioPlayer();

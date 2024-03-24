@@ -6,15 +6,6 @@ const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
 
-// async function simpanStreamKeFile(stream, path) {
-//   return new Promise((resolve, reject) => {
-//     const writeStream = fs.createWriteStream(path);
-//     stream.pipe(writeStream);
-//     writeStream.on("finish", resolve);
-//     writeStream.on("error", reject);
-//   });
-// }
-
 const getCurrentlyPlayingTime = (connection) => {
   const audioPlayer = connection.state.subscription.player;
   if (audioPlayer.state.status === AudioPlayerStatus.Playing) {
@@ -28,11 +19,17 @@ const getCurrentlyPlayingTime = (connection) => {
 };
 
 const addAmbient = async (message, con, argsAmbient) => {
+  let ambients = await message.client.db.get(`vc.${message.guild.id}.ambients`);
+
   let ambient = ambientList[argsAmbient][0];
   let list = require("../../../lofi");
 
+  ambients.push(ambient.name);
+  await message.client.db.set(`vc.${message.guild.id}.ambients`, ambients);
+
+  console.log("39", ambients);
+
   // Mendapatkan lagu yang sedang diputar
-  let checkNow = await message.client.db.has(`vc.${message.guild.id}.now`);
   let song = list[con.state.subscription.player.state.resource.metadata.index];
 
   // Tentukan titik waktu mulai mixing
@@ -46,27 +43,47 @@ const addAmbient = async (message, con, argsAmbient) => {
   let ambientdur = await getAudioDurationInSeconds(ambient.path);
   let loops = Math.ceil(songdur / ambientdur); // Jumlah loop
 
-  let filtergraph = [
-    "[0:a]volume=1[a0]", // Atur volume lagu
-    "[1:a]volume=1[a1]", // Atur volume ambient
-    "[1:a]aloop=loop=" + loops + ":size=1e6[a2]", // Loop ambient
-    "[a2]apad=whole_dur=10000,atrim=0:duration=" + songdur + "[a3]", // biar smooth loopingannya
-    "[a0][a1][a3]amix=inputs=3:duration=longest", // Mix ambient + lagu utama
-  ];
+  let hasfiltergraph = await message.client.db.get(`vc.${message.guild.id}.filtergraph`);
+  let lastfvar = await message.client.db.get(`vc.${message.guild.id}.filtergraph_last`);
+  let fmix = await message.client.db.get(`vc.${message.guild.id}.filtergraph_mix`);
+  let filtergraph = hasfiltergraph;
 
-  // Lakukan pemotongan audio lagu dari titik waktu yang ditentukan
+  let fmix2 = fmix ? fmix : "";
+
+  filtergraph.push(`[${ambients.length}:a]volume=1[a${lastfvar + 1}]`);
+  filtergraph.push(`[${ambients.length}:a]aloop=loop=${loops}:size=1e6[a${lastfvar + 2}]`);
+  filtergraph.push(`[a${lastfvar + 2}]apad=whole_dur=10000,atrim=0:duration=${songdur}[a${lastfvar + 3}]`);
+
+  await message.client.db.set(`vc.${message.guild.id}.filtergraph_last`, lastfvar + 3);
+  await message.client.db.set(`vc.${message.guild.id}.filtergraph`, filtergraph);
+
+  fmix2 += `[a${lastfvar + 1}][a${lastfvar + 3}]`;
+  await message.client.db.set(`vc.${message.guild.id}.filtergraph_mix`, fmix2);
+  await message.client.db.add(`vc.${message.guild.id}.filtergraph_mix_count`, 2);
+
   let path = `temp/tersimpan-${message.guild.id}.mp3`;
-  let hasnowpath = await message.client.db.get(`vc.${message.guild.id}.now_path`);
-  ffmpeg(hasnowpath ? hasnowpath : song.path)
+
+  let fg = await message.client.db.get(`vc.${message.guild.id}.filtergraph`);
+  let fgm = await message.client.db.get(`vc.${message.guild.id}.filtergraph_mix`);
+  let fgmc = await message.client.db.get(`vc.${message.guild.id}.filtergraph_mix_count`);
+
+  fg.push(`[a0]${fgm}amix=inputs=${fgmc}:duration=longest`);
+
+  console.log("137", fg);
+  ffmpeg(song.path)
     .setStartTime(startOffset)
     .outputOptions("-preset", "fast")
     .output(`temp/${song.title}-cut.mp3`)
     .on("end", () => {
       // Setelah selesai memotong, mix audio dengan ambient sound
-      ffmpeg()
-        .input(`temp/${song.title}-cut.mp3`)
-        .input(ambient.path)
-        .complexFilter(filtergraph)
+      let command = ffmpeg().input(`temp/${song.title}-cut.mp3`);
+
+      for (const ambient of ambients) {
+        command.input(ambientList[ambient][0].path);
+      }
+
+      command
+        .complexFilter(fg)
         .outputOptions("-preset", "fast")
         .output(path)
         .on("end", () => {
