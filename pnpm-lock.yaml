@@ -23,6 +23,9 @@ dependencies:
   express:
     specifier: ^4.19.1
     version: 4.19.1
+  ffmpeg-audio-mixer:
+    specifier: ^1.3.0
+    version: 1.3.0
   libsodium-wrappers:
     specifier: ^0.7.13
     version: 0.7.13
@@ -537,6 +540,10 @@ packages:
 
   /fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
+    dev: false
+
+  /ffmpeg-audio-mixer@1.3.0:
+    resolution: {integrity: sha512-nEdR+SJj7O14KixNky1QfNzlSVWROTZdWtoWSuyrOyBaTZ2CQtXXOPFgE09sdmLohzVHOoL/Kcf2olE6GZHIIw==}
     dev: false
 
   /file-uri-to-path@1.0.0:
