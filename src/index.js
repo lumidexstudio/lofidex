@@ -7,6 +7,10 @@ const { QuickDB } = require("quick.db");
 const express = require("express");
 const app = express();
 
+if (!fs.existsSync("temp")) {
+  fs.mkdirSync("temp");
+}
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,

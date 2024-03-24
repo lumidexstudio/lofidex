@@ -41,10 +41,6 @@ const addAmbient = async (message, con, argsAmbient) => {
 
   message.reply(`adding rains on playback ${startOffset} seconds`);
 
-  if (!fs.existsSync("temp")) {
-    fs.mkdirSync("temp");
-  }
-
   // Lakukan pemotongan audio lagu dari titik waktu yang ditentukan
   ffmpeg(song.path)
     .setStartTime(startOffset)
