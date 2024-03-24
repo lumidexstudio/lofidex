@@ -4,6 +4,7 @@ const { mixAudio } = require("ffmpeg-audio-mixer");
 const { StreamType } = require("@discordjs/voice");
 const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
+const { getAudioDurationInSeconds } = require('get-audio-duration')
 
 // async function simpanStreamKeFile(stream, path) {
 //   return new Promise((resolve, reject) => {
@@ -41,6 +42,10 @@ const addAmbient = async (message, con, argsAmbient) => {
 
   message.reply(`adding ${argsAmbient} on playback ${startOffset} seconds`);
 
+  let songdur = await getAudioDurationInSeconds(song.path)
+  let ambientdur = await getAudioDurationInSeconds(ambient.path)
+  let loops = Math.ceil(songdur / ambientdur); // Jumlah loop
+
   // Lakukan pemotongan audio lagu dari titik waktu yang ditentukan
   ffmpeg(song.path)
     .setStartTime(startOffset)
@@ -52,9 +57,10 @@ const addAmbient = async (message, con, argsAmbient) => {
         .input(`temp/${song.title}-cut.mp3`)
         .input(ambient.path)
         .complexFilter([
-          "[0:a]volume=1[a0]", // Atur volume lagu
-          "[1:a]volume=0.7[a1]", // Atur volume ambient
-          "[a0][a1]amix=inputs=2:duration=longest", // Mix kedua audio
+            "[0:a]volume=1[a0]", // Atur volume lagu
+            "[1:a]volume=0.5[a1]", // Atur volume ambient
+            "[1:a]aloop=loop="+loops+":size=1e6[a2]", // loop ambient
+            "[a0][a1][a2]amix=inputs=3:duration=longest" // mix ambient + lagu utama
         ])
         .outputOptions("-preset", "fast")
         .output("tersimpan.mp3")
