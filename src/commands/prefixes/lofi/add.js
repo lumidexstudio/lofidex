@@ -55,7 +55,9 @@ const addAmbient = async (message, con, argsAmbient) => {
   ];
 
   // Lakukan pemotongan audio lagu dari titik waktu yang ditentukan
-  ffmpeg(song.path)
+  let path = `temp/tersimpan-${message.guild.id}.mp3`;
+  let hasnowpath = await message.client.db.get(`vc.${message.guild.id}.now_path`)
+  ffmpeg(hasnowpath ? hasnowpath : song.path)
     .setStartTime(startOffset)
     .outputOptions("-preset", "fast")
     .output(`temp/${song.title}-cut.mp3`)
@@ -66,15 +68,17 @@ const addAmbient = async (message, con, argsAmbient) => {
         .input(ambient.path)
         .complexFilter(filtergraph)
         .outputOptions("-preset", "fast")
-        .output(`temp/tersimpan-${message.guild.id}.mp3`)
+        .output(path)
         .on("end", () => {
           // Setelah mixing selesai, putar hasil mixing
-          const res = createAudioResource(`temp/tersimpan-${message.guild.id}.mp3`, {
+          const res = createAudioResource(path, {
             inputType: StreamType.Raw,
             inlineVolume: true,
             metadata: { title: song.title, author: song.author, source: song.source, index: list.findIndex((item) => item.title == song.title) },
           });
+
           con.state.subscription.player.play(res);
+          message.client.db.set(`vc.${message.guild.id}.now_path`, path)
         })
         .run();
     })
