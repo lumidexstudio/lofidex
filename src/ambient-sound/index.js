@@ -3,8 +3,8 @@ const path = require("path");
 module.exports = {
   rains: [
     {
-      title: "rainy day in town",
-      source: "https://pixabay.com/sound-effects/rainy-day-in-town-with-birds-singing-194011/",
+      title: "Short Rain Loop",
+      source: "https://pixabay.com/sound-effects/short-rain-loop-101550/",
       path: path.join(__dirname, "rains.mp3"),
     },
   ],
