@@ -48,7 +48,7 @@ const addAmbient = async (message, con, argsAmbient) => {
 
   let filtergraph = [
     "[0:a]volume=1[a0]", // Atur volume lagu
-    "[1:a]volume=0.5[a1]", // Atur volume ambient
+    "[1:a]volume=1[a1]", // Atur volume ambient
     "[1:a]aloop=loop="+loops+":size=1e6[a2]", // Loop ambient
     "[a2]apad=whole_dur=10000,atrim=0:duration="+songdur+"[a3]", // biar smooth loopingannya
     "[a0][a1][a3]amix=inputs=3:duration=longest" // Mix ambient + lagu utama
