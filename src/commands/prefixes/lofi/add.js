@@ -16,7 +16,6 @@ const ffmpeg = require("fluent-ffmpeg");
 
 const getCurrentlyPlayingTime = (connection) => {
   const audioPlayer = connection.state.subscription.player;
-  console.log(audioPlayer.state.status == AudioPlayerStatus.Playing);
   if (audioPlayer.state.status === AudioPlayerStatus.Playing) {
     const currentTime = audioPlayer.state.playbackDuration;
     // Konversi waktu dari milidetik ke detik
@@ -37,14 +36,15 @@ const addAmbient = async (message, con, argsAmbient) => {
 
   // Tentukan titik waktu mulai mixing
   const startOffset = getCurrentlyPlayingTime(con);
-  con.state.subscription.player.pause()
+  if (!startOffset) return message.reply("No song were played!");
+  con.state.subscription.player.pause();
 
   message.reply(`adding rains on playback ${startOffset} seconds`);
 
   // Lakukan pemotongan audio lagu dari titik waktu yang ditentukan
   ffmpeg(song.path)
     .setStartTime(startOffset)
-    .outputOptions('-preset', 'fast')
+    .outputOptions("-preset", "fast")
     .output(`temp/${song.title}-cut.mp3`)
     .on("end", () => {
       // Setelah selesai memotong, mix audio dengan ambient sound
@@ -56,7 +56,7 @@ const addAmbient = async (message, con, argsAmbient) => {
           "[1:a]volume=0.7[a1]", // Atur volume ambient
           "[a0][a1]amix=inputs=2:duration=longest", // Mix kedua audio
         ])
-        .outputOptions('-preset', 'fast')
+        .outputOptions("-preset", "fast")
         .output("tersimpan.mp3")
         .on("end", () => {
           // Setelah mixing selesai, putar hasil mixing
