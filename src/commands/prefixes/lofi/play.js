@@ -5,7 +5,7 @@ async function genMusic(message, player) {
   let checkNow = await message.client.db.has(`vc.${message.guild.id}.now`);
 
   if (!checkNow) {
-    const song = list[0];
+    const song = list[Math.floor(Math.random() * list.length)];
     const res = createAudioResource(song.path, {
       metadata: { title: song.title, author: song.author, source: song.source },
     });
