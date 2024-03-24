@@ -60,7 +60,7 @@ const addAmbient = async (message, con, argsAmbient) => {
         .output("tersimpan.mp3")
         .on("end", () => {
           // Setelah mixing selesai, putar hasil mixing
-          const res = createAudioResource("tersimpan.mp3", { inputType: StreamType.Raw });
+          const res = createAudioResource("tersimpan.mp3", { inputType: StreamType.Raw, inlineVolume: true });
           con.state.subscription.player.play(res);
         })
         .run();
