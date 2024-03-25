@@ -1,4 +1,7 @@
 const { joinVoiceChannel, VoiceConnectionStatus, entersState, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require("@discordjs/voice");
+const { ActionRowBuilder } = require("discord.js");
+const { EmbedBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { getAudioDurationInSeconds } = require("get-audio-duration");
 
 async function genMusic(message, player) {
   let list = require("../../../lofi");
@@ -7,26 +10,24 @@ async function genMusic(message, player) {
   if (!checkNow) {
     const song = list[Math.floor(Math.random() * list.length)];
     const res = createAudioResource(song.path, {
-      metadata: { title: song.title, author: song.author, source: song.source, index: list.findIndex((item) => item.title == song.title) },
+      metadata: { title: song.title, author: song.author, source: song.source, cover: song.cover, path: song.path, index: list.findIndex((item) => item.title == song.title) },
       inlineVolume: true,
     });
 
     player.play(res);
     await message.client.db.set(`vc.${message.guild.id}.now`, 0);
-    message.reply(`now playing: ${res.metadata.title} by ${res.metadata.author}`);
   } else {
     let now = await message.client.db.get(`vc.${message.guild.id}.now`);
     let song = list[now + 1];
 
     if (!song) song = list[0];
     const res = createAudioResource(song.path, {
-      metadata: { title: song.title, author: song.author, source: song.source, index: list.findIndex((item) => item.title == song.title) },
+      metadata: { title: song.title, author: song.author, source: song.source, cover: song.cover, path: song.path, index: list.findIndex((item) => item.title == song.title) },
       inlineVolume: true,
     });
 
     player.play(res);
     await message.client.db.set(`vc.${message.guild.id}.now`, now + 1);
-    message.reply(`now playing: ${res.metadata.title} by ${res.metadata.author}`);
   }
 }
 
@@ -51,19 +52,33 @@ module.exports = {
     });
 
     connection.on(VoiceConnectionStatus.Ready, () => {
-      message.client.db.set(`vc.${message.guild.id}`, { channel: voiceChannel.id, master: message.member.user.id, ambients: [], filtergraph: ["[0:a]volume=2[a0]"], filtergraph_last: 0, filtergraph_mix: '', filtergraph_mix_count: 1 });
+      message.client.db.set(`vc.${message.guild.id}`, { channel: voiceChannel.id, master: message.member.user.id, ambients: [], filtergraph: ["[0:a]volume=2[a0]"], filtergraph_last: 0, filtergraph_mix: "", filtergraph_mix_count: 1 });
       console.log("bot connected - ready to play");
 
       const player = createAudioPlayer();
       connection.subscribe(player);
       genMusic(message, player, connection);
 
+      let embed = new EmbedBuilder().setColor("Random");
       player.on(AudioPlayerStatus.Buffering, () => {
-        message.reply("buffering");
+        embed = embed.setTitle("Buffering").setDescription("Please wait until song are played");
+        message.replyWithoutMention({ embeds: [embed] });
       });
 
-      player.on(AudioPlayerStatus.Playing, () => {
-        message.reply("playing...");
+      player.on(AudioPlayerStatus.Playing, async () => {
+        let song = connection.state.subscription.player.state.resource.metadata;
+        let songDuration = await getAudioDurationInSeconds(song.path);
+        let sourceButton = new ButtonBuilder().setLabel("Source").setURL(song.source).setStyle(ButtonStyle.Link);
+
+        let row = new ActionRowBuilder().addComponents(sourceButton);
+
+        embed = embed
+          .setTitle(`Playing ${song.title}`)
+          .setDescription(`By: ${song.author}\nDuration: ${Math.ceil(songDuration)} Seconds`)
+          .setThumbnail(song.cover)
+          .setTimestamp();
+
+        message.replyWithoutMention({ embeds: [embed], components: [row] });
       });
 
       player.on("error", (error) => {

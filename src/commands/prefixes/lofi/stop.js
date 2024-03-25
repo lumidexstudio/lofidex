@@ -1,4 +1,5 @@
 const { getVoiceConnection } = require("@discordjs/voice");
+const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
   name: "stop",
@@ -14,6 +15,8 @@ module.exports = {
 
     await getVoiceConnection(message.guild.id).disconnect();
     await message.client.db.delete(`vc.${message.guild.id}`);
-    message.reply("disconnected");
+
+    let embed = new EmbedBuilder().setTitle("Disconnected").setTimestamp().setColor("Random");
+    message.reply({ embeds: [embed] });
   },
 };
