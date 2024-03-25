@@ -28,7 +28,7 @@ const addAmbient = async (message, con, argsAmbient) => {
   if (!startOffset) return message.reply("No song were played!");
   con.state.subscription.player.pause();
 
-  message.reply(`adding ${argsAmbient} on playback ${startOffset} seconds`);
+  let msg = await message.channel.send(`adding ${argsAmbient} on playback ${startOffset} seconds`);
 
   let songdur = await getAudioDurationInSeconds(song.path);
   let ambientdur = await getAudioDurationInSeconds(ambient.path);
@@ -87,6 +87,7 @@ const addAmbient = async (message, con, argsAmbient) => {
 
           con.state.subscription.player.play(res);
           message.client.db.set(`vc.${message.guild.id}.now_path`, path);
+          msg.edit('ambients added successfully!')
         })
         .run();
     })
