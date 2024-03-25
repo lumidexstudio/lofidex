@@ -37,10 +37,6 @@ module.exports = {
 
                     btns[x.customId].setStyle(ButtonStyle.Primary);
                     msg.edit({ content: "no args provided, you can use the buttons bellow. Now: " + player.state.resource.volume.volume * 100 + "%", components: [volumeRow] })
-                    const collector2 = message.channel.createMessageComponentCollector({ time: 120000 });
-                    collector2.on('collect', async(i) => {
-                        set(i)
-                    });
                 }
     
                 await d.deferUpdate();

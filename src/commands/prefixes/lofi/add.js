@@ -156,10 +156,6 @@ module.exports = {
               })
               
               msg.edit({ content: `no args provided, you can use the buttons bellow. Now: ${ambientsNow.join(", ")}`, components: [row] })
-              const collector2 = message.channel.createMessageComponentCollector({ time: 120000 });
-              collector2.on('collect', async(i) => {
-                  set(i)
-              });
           }
 
           await d.deferUpdate();
