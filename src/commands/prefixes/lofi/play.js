@@ -10,7 +10,14 @@ async function genMusic(message, player) {
   if (!checkNow) {
     const song = list[Math.floor(Math.random() * list.length)];
     const res = createAudioResource(song.path, {
-      metadata: { title: song.title, author: song.author, source: song.source, cover: song.cover, path: song.path, index: list.findIndex((item) => item.title == song.title) },
+      metadata: {
+        title: song.title,
+        author: song.author,
+        source: song.source,
+        cover: song.cover,
+        path: song.path,
+        index: list.findIndex((item) => item.title == song.title),
+      },
       inlineVolume: true,
     });
 
@@ -28,7 +35,14 @@ async function genMusic(message, player) {
     }
 
     const res = createAudioResource(song.path, {
-      metadata: { title: song.title, author: song.author, source: song.source, cover: song.cover, path: song.path, index: list.findIndex((item) => item.title == song.title) },
+      metadata: {
+        title: song.title,
+        author: song.author,
+        source: song.source,
+        cover: song.cover,
+        path: song.path,
+        index: list.findIndex((item) => item.title == song.title),
+      },
       inlineVolume: true,
     });
 

@@ -5,8 +5,19 @@ const { StreamType } = require("@discordjs/voice");
 const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
-const { ActionRowBuilder, ButtonStyle, ButtonBuilder } = require('discord.js');
-const getCurrentlyPlayingTime = require("../../../lib/getCurrentPlayingTime");
+const { ActionRowBuilder, ButtonStyle, ButtonBuilder } = require("discord.js");
+
+const getCurrentlyPlayingTime = (connection) => {
+  const audioPlayer = connection.state.subscription.player;
+  if (audioPlayer.state.status === AudioPlayerStatus.Playing) {
+    const currentTime = audioPlayer.state.playbackDuration;
+    // Konversi waktu dari milidetik ke detik
+    const currentTimeInSeconds = Math.floor(currentTime / 1000);
+    return currentTimeInSeconds;
+  } else {
+    return null;
+  }
+};
 
 const addAmbient = async (message, con, argsAmbient) => {
   if (!ambientList[argsAmbient]) return message.reply("ambient not found");
@@ -107,18 +118,18 @@ module.exports = {
     if (!voiceChannel) return message.reply("No voice channel were found");
 
     const connection = getVoiceConnection(message.guild.id);
-    
-    if(args[0]) {
+
+    if (args[0]) {
       addAmbient(message, connection, args[0]);
     } else {
       let btns = {};
       let ambientsNow = await message.client.db.get(`vc.${message.guild.id}.ambients`);
       let row = new ActionRowBuilder();
       for (const xambient of Object.keys(ambientList)) {
-        let ambient = ambientList[xambient][0]
+        let ambient = ambientList[xambient][0];
         btns[ambient.name] = new ButtonBuilder().setCustomId(ambient.name).setLabel(ambient.name).setEmoji(ambient.emoji);
-        
-        if(ambientsNow.includes(ambient.name)) {
+
+        if (ambientsNow.includes(ambient.name)) {
           btns[ambient.name].setStyle(ButtonStyle.Primary);
         } else {
           btns[ambient.name].setStyle(ButtonStyle.Secondary);
@@ -129,36 +140,36 @@ module.exports = {
 
       let msg = await message.channel.send({ content: `no args provided, you can use the buttons bellow. Now: ${ambientsNow.join(", ")}`, components: [row] });
       const collector = message.channel.createMessageComponentCollector({ time: 120000 });
-      collector.on('collect', async(d) => {
-          const set = async(x) => {
-              let ambientsOld = await message.client.db.get(`vc.${message.guild.id}.ambients`);
+      collector.on("collect", async (d) => {
+        const set = async (x) => {
+          let ambientsOld = await message.client.db.get(`vc.${message.guild.id}.ambients`);
 
-              if(ambientsOld.includes(x.customId)) {
-                // TODO: remove ambients
+          if (ambientsOld.includes(x.customId)) {
+            // TODO: remove ambients
 
-                return;
-              }
-
-              await addAmbient(message, connection, x.customId);
-
-              let ambientsNow = await message.client.db.get(`vc.${message.guild.id}.ambients`);
-              Object.keys(btns).map((x) => {
-                if(ambientsNow.includes(x)) {
-                  btns[x].setStyle(ButtonStyle.Primary);
-                } else {
-                  btns[x].setStyle(ButtonStyle.Secondary);
-                }
-              })
-              
-              msg.edit({ content: `no args provided, you can use the buttons bellow. Now: ${ambientsNow.join(", ")}`, components: [row] })
-              const collector2 = message.channel.createMessageComponentCollector({ time: 120000 });
-              collector2.on('collect', async(i) => {
-                  set(i)
-              });
+            return;
           }
 
-          await d.deferUpdate();
-          set(d)
+          await addAmbient(message, connection, x.customId);
+
+          let ambientsNow = await message.client.db.get(`vc.${message.guild.id}.ambients`);
+          Object.keys(btns).map((x) => {
+            if (ambientsNow.includes(x)) {
+              btns[x].setStyle(ButtonStyle.Primary);
+            } else {
+              btns[x].setStyle(ButtonStyle.Secondary);
+            }
+          });
+
+          msg.edit({ content: `no args provided, you can use the buttons bellow. Now: ${ambientsNow.join(", ")}`, components: [row] });
+          const collector2 = message.channel.createMessageComponentCollector({ time: 120000 });
+          collector2.on("collect", async (i) => {
+            set(i);
+          });
+        };
+
+        await d.deferUpdate();
+        set(d);
       });
     }
   },
