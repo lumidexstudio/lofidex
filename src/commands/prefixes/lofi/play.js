@@ -82,7 +82,7 @@ module.exports = {
 
       let embed = new EmbedBuilder().setColor("Random").setAuthor({ name: 'Loading' }).setDescription(italic('Preparing...'));
       player.on(AudioPlayerStatus.Buffering, async() => {
-        embed.setAuthor({ name: 'Buffering' }).setDescription("Please wait until song are played")
+        embed.setAuthor({ name: 'Buffering' }).setDescription("Please wait until song are played").setThumbnail(null)
         message.replyWithoutMention({ embeds: [embed] });
       });
 
