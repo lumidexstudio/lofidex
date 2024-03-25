@@ -9,6 +9,7 @@ const { ButtonBuilder, ButtonStyle } = require('discord.js');
 const { ActionRowBuilder, ComponentType } = require('discord.js');
 const { AudioPlayerStatus } = require('@discordjs/voice');
 const skipMusic = require('../../../lib/music/skip');
+const { errorEmbed } = require('../../../lib/embed');
 
 module.exports = {
   name: "nowplaying",
@@ -17,10 +18,10 @@ module.exports = {
   category: "lofi",
   async execute(message) {
     let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);
-    if(!isplaying) return message.reply("does'nt play any song rn");
+    if(!isplaying) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });
     
     let getdb = await message.client.db.get(`vc.${message.guild.id}`);
-    if (getdb.channel !== message.member.voice.channelId) return message.reply(`we are not in the same vc`);
+    if (getdb.channel !== message.member.voice.channelId) return message.replyWithoutMention({ embeds: [errorEmbed(`We are not in the same voice channel!`)] });
 
     let detail = songlist[getdb.now];
 

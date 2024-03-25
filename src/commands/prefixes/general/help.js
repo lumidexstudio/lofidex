@@ -1,5 +1,6 @@
 const { EmbedBuilder, inlineCode } = require("discord.js");
 const ms = require('ms');
+const { noteEmbed } = require("../../../lib/embed");
 
 module.exports = {
     name: "help",
@@ -10,10 +11,6 @@ module.exports = {
     args: ["<cmd?>"],
     async execute(message, args) {
         let client = message.client;
-        let noteEmbed = new EmbedBuilder()
-              .setDescription(`If there is an argument like ${inlineCode('<argument?>')} at usage, This mean the argument are optional. Otherwise required argument will be marked like ${inlineCode('<argument>')}.`)
-              .setColor('Random');
-
         if(args.length) {
           let info = client.prefixes.get(args[0]);
           if(!info) return message.replyWithoutMention({ content: `${message.author.username}, Command ${inlineCode(args[0])} not found! try using the command name instead of command aliases!` });
@@ -26,9 +23,9 @@ module.exports = {
               { name: 'Category', value: inlineCode(info.category || 'none') },
               { name: 'Usage', value: inlineCode((message.used.prefix + info.name + ' ' + (info.args? info.args.join(' ') : '')).trim()) }
             )
-            .setColor('Random');
+            .setColor('Purple');
 
-          let embeds = info.args ? [infoEmbed, noteEmbed] : [infoEmbed];
+          let embeds = info.args ? [infoEmbed, noteEmbed(`If there is an argument like ${inlineCode('<argument?>')} at usage, This mean the argument are optional. Otherwise required argument will be marked like ${inlineCode('<argument>')}.`)] : [infoEmbed];
           return message.replyWithoutMention({ embeds })
         }
 

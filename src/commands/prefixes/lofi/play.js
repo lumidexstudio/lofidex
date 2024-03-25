@@ -3,6 +3,7 @@ const { ActionRowBuilder } = require("discord.js");
 const { EmbedBuilder, ButtonBuilder, ButtonStyle, italic } = require("discord.js");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
 const humanizeTime = require("../../../lib/humanizeTime");
+const { errorEmbed, infoEmbed } = require("../../../lib/embed");
 
 async function genMusic(message, player) {
   let list = require("../../../lofi");
@@ -63,12 +64,12 @@ module.exports = {
   category: "lofi",
   async execute(message) {
     const voiceChannelId = message.member.voice.channelId;
-    if (!voiceChannelId) return message.reply("You are not in the voice channel rn");
+    if (!voiceChannelId) return message.replyWithoutMention({ embeds: [errorEmbed('You must be on the voice channel first!')] });
 
     const voiceChannel = message.guild.channels.cache.get(voiceChannelId);
-    if (!voiceChannel) return message.reply("Voice channel not found!");
+    if (!voiceChannel) return message.replyWithoutMention({ embeds: [errorEmbed(`Voice channel not found`) ]});
 
-    if (message.client.voice.adapters.has(message.guild.id)) return message.reply(`I already joined`);
+    if (message.client.voice.adapters.has(message.guild.id)) return message.replyWithoutMention({ embeds: [infoEmbed('Lofidex is already on the voice channel and is probably playing lofi.') ]});
 
     const connection = joinVoiceChannel({
       channelId: voiceChannel.id,

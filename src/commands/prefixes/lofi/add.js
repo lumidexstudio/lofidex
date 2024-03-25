@@ -5,11 +5,12 @@ const { StreamType } = require("@discordjs/voice");
 const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
-const { ActionRowBuilder, ButtonStyle, ButtonBuilder, ComponentType } = require('discord.js');
+const { ActionRowBuilder, ButtonStyle, ButtonBuilder, ComponentType, inlineCode } = require('discord.js');
 const getCurrentlyPlayingTime = require("../../../lib/getCurrentPlayingTime");
+const { errorEmbed, loadingEmbed, successEmbed, infoEmbed } = require("../../../lib/embed");
 
 const addAmbient = async (message, con, argsAmbient) => {
-  if (!ambientList[argsAmbient]) return message.reply("ambient not found");
+  if (!ambientList[argsAmbient]) return message.replyWithoutMention({ embeds: [errorEmbed('Ambient not found!') ]});
   let ambients = await message.client.db.get(`vc.${message.guild.id}.ambients`);
 
   let ambient = ambientList[argsAmbient][0];
@@ -25,10 +26,10 @@ const addAmbient = async (message, con, argsAmbient) => {
 
   // Tentukan titik waktu mulai mixing
   const startOffset = getCurrentlyPlayingTime(con);
-  if (!startOffset) return message.reply("No song were played!");
+  if (!startOffset) return message.replyWithoutMention({ embeds: [errorEmbed('No song were played!') ]});
   con.state.subscription.player.pause();
 
-  let msg = await message.channel.send(`adding ${argsAmbient} on playback ${startOffset} seconds`);
+  let msg = await message.channel.send({ embeds: [loadingEmbed(`Trying to add ${ambient.name} to the current song...`)] });
 
   let songdur = await getAudioDurationInSeconds(song.path);
   let ambientdur = await getAudioDurationInSeconds(ambient.path);
@@ -87,7 +88,7 @@ const addAmbient = async (message, con, argsAmbient) => {
 
           con.state.subscription.player.play(res);
           message.client.db.set(`vc.${message.guild.id}.now_path`, path);
-          msg.edit('ambients added successfully!')
+          msg.edit({ embeds: [successEmbed('Ambient added successfully!')] })
         })
         .run();
     })
@@ -102,13 +103,13 @@ module.exports = {
   args: ["<ambient?>"],
   async execute(message, args) {
     let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);
-    if(!isplaying) return message.reply("does'nt play any song rn");
+    if(!isplaying) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });
     
     let host = await message.client.db.get(`vc.${message.guild.id}.master`);
     
     let getdb = await message.client.db.get(`vc.${message.guild.id}`);
-    if(getdb.master !== message.member.user.id) return message.reply(`you are not the user that using the play command previously`)
-    if(getdb.channel !== message.member.voice.channelId) return message.reply(`we are not in the same vc`);
+    if(getdb.master !== message.member.user.id) return message.replyWithoutMention({ embeds: [errorEmbed('Only the DJ can control using this command.')] })
+    if(getdb.channel !== message.member.voice.channelId) return message.replyWithoutMention({ embeds: [errorEmbed(`We are not in the same voice channel!`)] });
 
     const connection = getVoiceConnection(message.guild.id);
     
@@ -131,7 +132,7 @@ module.exports = {
         row.addComponents(btns[ambient.name]);
       }
 
-      let msg = await message.channel.send({ content: `no args provided, you can use the buttons bellow. Now: ${ambientsNow.join(", ")}`, components: [row] });
+      let msg = await message.channel.send({ embeds: [infoEmbed(`Add some ambients? use the buttons below...\n\nCurrent ambients: ${inlineCode(ambientsNow.length ? ambientsNow.join('`, `') : 'none')}`)], components: [row] });
       const collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
       collector.on('collect', async(d) => {
           const set = async(x) => {
@@ -154,7 +155,7 @@ module.exports = {
                 }
               })
               
-              msg.edit({ content: `no args provided, you can use the buttons bellow. Now: ${ambientsNow.join(", ")}`, components: [row] })
+              msg.edit({ embeds: [infoEmbed(`Add some ambients? use the buttons below...\n\nCurrent ambients: ${inlineCode(ambientsNow.length ? ambientsNow.join('`, `') : 'none')}`)], components: [row] })
           }
 
           await d.deferUpdate();
