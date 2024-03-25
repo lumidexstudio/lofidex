@@ -158,6 +158,13 @@ module.exports = {
           }
 
           await d.deferUpdate();
+          if(d.user.id !== host) {
+            return d.followUp({
+              content: `${d.user.username}, only host can use this button.`,
+              ephemeral: true,
+            });
+          }
+          
           set(d)
       });
     }
