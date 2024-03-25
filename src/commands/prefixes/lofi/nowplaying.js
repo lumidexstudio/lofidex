@@ -8,6 +8,7 @@ const { default: getAudioDurationInSeconds } = require('get-audio-duration');
 const { ButtonBuilder, ButtonStyle } = require('discord.js');
 const { ActionRowBuilder } = require('discord.js');
 const { AudioPlayerStatus } = require('@discordjs/voice');
+const skipMusic = require('../../../lib/music/skip');
 
 module.exports = {
   name: "nowplaying",
@@ -37,11 +38,12 @@ module.exports = {
 
     let btns = {
       pause: new ButtonBuilder().setCustomId('pause').setLabel('Pause').setEmoji("⏸").setStyle(ButtonStyle.Secondary),
-      stop: new ButtonBuilder().setCustomId('stop').setLabel('Stop').setEmoji("⏹").setStyle(ButtonStyle.Danger)
+      stop: new ButtonBuilder().setCustomId('stop').setLabel('Stop').setEmoji("⏹").setStyle(ButtonStyle.Danger),
+      skip: new ButtonBuilder().setCustomId('skip').setLabel('Skip').setEmoji("⏭").setStyle(ButtonStyle.Primary),
     }
 
     // buggy btns.pause
-    let row = new ActionRowBuilder().addComponents(btns.stop);
+    let row = new ActionRowBuilder().addComponents(btns.skip, btns.stop);
     let msg = await message.channel.send({ embeds: [embed], components: [row] });
 
     const collector = message.channel.createMessageComponentCollector({ time: 120000 });
@@ -60,6 +62,18 @@ module.exports = {
           }
         } else if(x.customId === 'stop') {
           collector.stop('disconnect');
+        } else if(x.customId === 'skip') {
+          await skipMusic(message, connection.state.subscription.player);
+          let now = await message.client.db.get(`vc.${message.guild.id}.now`);
+          let detail = songlist[now];
+          embed.setTitle(detail.title + " by " + detail.author)
+            .setURL(detail.source)
+            .setThumbnail(detail.cover)
+            .setDescription(`${formatTime(nowin)} ${createProgressBar(nowin, dur)} ${formatTime(dur)}`)
+            .setTimestamp()
+            .setFooter({ text: `Song ID: ${detail.id}` });
+
+          msg.edit({ embeds: [embed], components: [row] })
         }
 
         msg.edit({ embeds: [embed], components: [row] })
@@ -84,10 +98,9 @@ module.exports = {
       if(r === 'disconnect') {
         try {
           connection.disconnect();
-          await msg.delete();
           await message.client.db.delete(`vc.${message.guild.id}`);
 
-          let embed = new EmbedBuilder().setTitle("Disconnected").setTimestamp().setColor("Random");
+          let embed = new EmbedBuilder().setTitle("Disconnected").setColor("Random");
           message.replyWithoutMention({ embeds: [embed] });
         } catch {
           console.log("err stop button now playing")

@@ -82,8 +82,7 @@ module.exports = {
 
       let embed = new EmbedBuilder().setColor("Random");
       player.on(AudioPlayerStatus.Buffering, () => {
-        embed = embed.setTitle("Buffering").setDescription("Please wait until song are played");
-        message.replyWithoutMention({ embeds: [embed] });
+        message.replyWithoutMention({ embeds: [new EmbedBuilder().setColor("Random").setTitle("Buffering").setDescription("Please wait until song are played")] });
       });
 
       player.on(AudioPlayerStatus.Playing, async () => {
