@@ -20,14 +20,19 @@ async function genMusic(message, player) {
     let now = await message.client.db.get(`vc.${message.guild.id}.now`);
     let song = list[now + 1];
 
-    if (!song) song = list[0];
+    if (!song) {
+      song = list[0];
+      await message.client.db.set(`vc.${message.guild.id}.now`, 0);
+    } else {
+      await message.client.db.set(`vc.${message.guild.id}.now`, now + 1);
+    }
+
     const res = createAudioResource(song.path, {
       metadata: { title: song.title, author: song.author, source: song.source, cover: song.cover, path: song.path, index: list.findIndex((item) => item.title == song.title) },
       inlineVolume: true,
     });
 
     player.play(res);
-    await message.client.db.set(`vc.${message.guild.id}.now`, now + 1);
   }
 }
 
@@ -52,7 +57,7 @@ module.exports = {
     });
 
     connection.on(VoiceConnectionStatus.Ready, () => {
-      message.client.db.set(`vc.${message.guild.id}`, { channel: voiceChannel.id, master: message.member.user.id, ambients: [], filtergraph: ["[0:a]volume=2[a0]"], filtergraph_last: 0, filtergraph_mix: "", filtergraph_mix_count: 1 });
+      message.client.db.set(`vc.${message.guild.id}`, { channel: voiceChannel.id, master: message.member.user.id, ambients: [], filtergraph: ["[0:a]volume=3[a0]"], filtergraph_last: 0, filtergraph_mix: "", filtergraph_mix_count: 1 });
       console.log("bot connected - ready to play");
 
       const player = createAudioPlayer();
