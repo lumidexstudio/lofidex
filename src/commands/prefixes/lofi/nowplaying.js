@@ -43,7 +43,7 @@ module.exports = {
     }
 
     // buggy btns.pause
-    let row = new ActionRowBuilder().addComponents(btns.skip, btns.stop);
+    let row = new ActionRowBuilder().addComponents(btns.pause, btns.skip, btns.stop);
     let msg = await message.channel.send({ embeds: [embed], components: [row] });
 
     const collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
@@ -54,8 +54,6 @@ module.exports = {
           if(player.state.status === AudioPlayerStatus.Paused) {
               player.unpause();
               btns.pause.setStyle(ButtonStyle.Secondary).setLabel('Pause').setEmoji("⏸");
-              msg.edit({ embeds: [embed], components: [row] })
-              return;
           } else {
               player.pause();
               btns.pause.setStyle(ButtonStyle.Primary).setLabel('Resume').setEmoji("▶");
@@ -75,10 +73,6 @@ module.exports = {
         }
 
         msg.edit({ embeds: [embed], components: [row] })
-        const collector2 = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
-        collector2.on("collect", async (i) => {
-          set(i);
-        });
       };
 
       await d.deferUpdate();
