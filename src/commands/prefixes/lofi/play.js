@@ -2,6 +2,7 @@ const { joinVoiceChannel, VoiceConnectionStatus, entersState, createAudioPlayer,
 const { ActionRowBuilder } = require("discord.js");
 const { EmbedBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
+const humanizeTime = require("../../../lib/humanizeTime");
 
 async function genMusic(message, player) {
   let list = require("../../../lofi");
@@ -94,7 +95,7 @@ module.exports = {
 
         embed = embed
           .setTitle(`Playing ${song.title}`)
-          .setDescription(`By: ${song.author}\nDuration: ${Math.ceil(songDuration)} Seconds`)
+          .setDescription(`By: ${song.author}\nDuration: ${humanizeTime(Math.ceil(songDuration))}`)
           .setThumbnail(song.cover)
           .setTimestamp();
 
