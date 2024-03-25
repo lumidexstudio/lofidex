@@ -43,7 +43,7 @@ const addAmbient = async (message, con, argsAmbient) => {
 
   filtergraph.push(`[${ambients.length}:a]volume=${ambient.defaultVolume}[a${lastfvar + 1}]`);
   filtergraph.push(`[${ambients.length}:a]aloop=loop=${loops}:size=1e6[a${lastfvar + 2}]`);
-  filtergraph.push(`[a${lastfvar + 2}]apad=whole_dur=10000,atrim=0:duration=${Math.round(parseInt(songdur))}[a${lastfvar + 3}]`);
+  filtergraph.push(`[a${lastfvar + 2}]apad=whole_dur=10000,atrim=0:duration=${songdur}[a${lastfvar + 3}]`);
 
   await message.client.db.set(`vc.${message.guild.id}.filtergraph_last`, lastfvar + 3);
   await message.client.db.set(`vc.${message.guild.id}.filtergraph`, filtergraph);
@@ -82,7 +82,7 @@ const addAmbient = async (message, con, argsAmbient) => {
           const res = createAudioResource(path, {
             inputType: StreamType.Raw,
             inlineVolume: true,
-            metadata: { title: song.title, author: song.author, source: song.source, index: list.findIndex((item) => item.title == song.title) },
+            metadata: { title: song.title, author: song.author, source: song.source, path: song.path, index: list.findIndex((item) => item.title == song.title) },
           });
 
           con.state.subscription.player.play(res);
