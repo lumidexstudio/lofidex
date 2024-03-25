@@ -1,6 +1,6 @@
 const { joinVoiceChannel, VoiceConnectionStatus, entersState, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require("@discordjs/voice");
 const { ActionRowBuilder } = require("discord.js");
-const { EmbedBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { EmbedBuilder, ButtonBuilder, ButtonStyle, italic } = require("discord.js");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
 const humanizeTime = require("../../../lib/humanizeTime");
 
@@ -72,7 +72,7 @@ module.exports = {
       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
     });
 
-    connection.on(VoiceConnectionStatus.Ready, () => {
+    connection.on(VoiceConnectionStatus.Ready, async() => {
       message.client.db.set(`vc.${message.guild.id}`, { channel: voiceChannel.id, master: message.member.user.id, ambients: [], filtergraph: ["[0:a]volume=3[a0]"], filtergraph_last: 0, filtergraph_mix: "", filtergraph_mix_count: 1 });
       console.log("bot connected - ready to play");
 
@@ -80,9 +80,10 @@ module.exports = {
       connection.subscribe(player);
       genMusic(message, player, connection);
 
-      let embed = new EmbedBuilder().setColor("Random");
-      player.on(AudioPlayerStatus.Buffering, () => {
-        message.replyWithoutMention({ embeds: [new EmbedBuilder().setColor("Random").setTitle("Buffering").setDescription("Please wait until song are played")] });
+      let embed = new EmbedBuilder().setColor("Random").setAuthor({ name: 'Loading' }).setDescription(italic('Preparing...'));
+      player.on(AudioPlayerStatus.Buffering, async() => {
+        embed.setAuthor({ name: 'Buffering' }).setDescription("Please wait until song are played")
+        message.replyWithoutMention({ embeds: [embed] });
       });
 
       player.on(AudioPlayerStatus.Playing, async () => {
@@ -92,13 +93,13 @@ module.exports = {
 
         let row = new ActionRowBuilder().addComponents(sourceButton);
 
-        embed = embed
-          .setTitle(`Playing ${song.title}`)
+        embed
+          .setAuthor({ name: `Playing ${song.title}` })
           .setDescription(`By: ${song.author}\nDuration: ${humanizeTime(Math.ceil(songDuration))}`)
           .setThumbnail(song.cover)
           .setTimestamp();
 
-        message.replyWithoutMention({ embeds: [embed], components: [row] });
+        message.channel.send({ embeds: [embed], components: [row] });
       });
 
       player.on("error", (error) => {

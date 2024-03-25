@@ -72,8 +72,6 @@ module.exports = {
             .setDescription(`${formatTime(nowin)} ${createProgressBar(nowin, dur)} ${formatTime(dur)}`)
             .setTimestamp()
             .setFooter({ text: `Song ID: ${detail.id}` });
-
-          msg.edit({ embeds: [embed], components: [row] })
         }
 
         msg.edit({ embeds: [embed], components: [row] })
