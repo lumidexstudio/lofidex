@@ -5,6 +5,7 @@ const { StreamType } = require("@discordjs/voice");
 const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
+const { ActionRowBuilder, ButtonStyle, ButtonBuilder } = require('discord.js');
 
 const getCurrentlyPlayingTime = (connection) => {
   const audioPlayer = connection.state.subscription.player;
@@ -19,6 +20,7 @@ const getCurrentlyPlayingTime = (connection) => {
 };
 
 const addAmbient = async (message, con, argsAmbient) => {
+  if (!ambientList[argsAmbient]) return message.reply("ambient not found");
   let ambients = await message.client.db.get(`vc.${message.guild.id}.ambients`);
 
   let ambient = ambientList[argsAmbient][0];
@@ -107,7 +109,7 @@ module.exports = {
   description: "adding ambient sound effect",
   cooldown: 1,
   category: "lofi",
-  args: ["<ambient>"],
+  args: ["<ambient?>"],
   async execute(message, args) {
     const voiceChannelId = message.member.voice.channelId;
     if (!voiceChannelId) return message.reply("You are not in voice channel");
@@ -115,27 +117,60 @@ module.exports = {
     const voiceChannel = message.guild.channels.cache.get(voiceChannelId);
     if (!voiceChannel) return message.reply("No voice channel were found");
 
-    if (!ambientList[args[0]]) return message.reply("ambient not found");
-
     const connection = getVoiceConnection(message.guild.id);
-    addAmbient(message, connection, args[0]);
-    // const player = new PlaySong().player
-    // player.pause();
+    
+    if(args[0]) {
+      addAmbient(message, connection, args[0]);
+    } else {
+      let btns = {};
+      let ambientsNow = await message.client.db.get(`vc.${message.guild.id}.ambients`);
+      let row = new ActionRowBuilder();
+      for (const xambient of Object.keys(ambientList)) {
+        let ambient = ambientList[xambient][0]
+        btns[ambient.name] = new ButtonBuilder().setCustomId(ambient.name).setLabel(ambient.name).setEmoji(ambient.emoji);
+        
+        if(ambientsNow.includes(ambient.name)) {
+          btns[ambient.name].setStyle(ButtonStyle.Primary);
+        } else {
+          btns[ambient.name].setStyle(ButtonStyle.Secondary);
+        }
 
-    // const player = createAudioPlayer();
-    // connection.subscribe(player);
-    // addAmbient(message, player, args[0]);
+        row.addComponents(btns[ambient.name]);
+      }
 
-    // player.on(AudioPlayerStatus.Buffering, () => {
-    //   message.reply("buffering...");
-    // });
+      let msg = await message.channel.send({ content: `no args provided, you can use the buttons bellow. Now: ${ambientsNow.join(", ")}`, components: [row] });
+      const collector = message.channel.createMessageComponentCollector({ time: 120000 });
+      collector.on('collect', async(d) => {
+          const set = async(x) => {
+              let ambientsOld = await message.client.db.get(`vc.${message.guild.id}.ambients`);
 
-    // player.on(AudioPlayerStatus.Playing, () => {
-    //   message.reply("adding ambient");
-    // });
+              if(ambientsOld.includes(x.customId)) {
+                // TODO: remove ambients
 
-    // player.on("error", (error) => {
-    //   console.log(error);
-    // });
+                return;
+              }
+
+              await addAmbient(message, connection, x.customId);
+
+              let ambientsNow = await message.client.db.get(`vc.${message.guild.id}.ambients`);
+              Object.keys(btns).map((x) => {
+                if(ambientsNow.includes(x)) {
+                  btns[x].setStyle(ButtonStyle.Primary);
+                } else {
+                  btns[x].setStyle(ButtonStyle.Secondary);
+                }
+              })
+              
+              msg.edit({ content: `no args provided, you can use the buttons bellow. Now: ${ambientsNow.join(", ")}`, components: [row] })
+              const collector2 = message.channel.createMessageComponentCollector({ time: 120000 });
+              collector2.on('collect', async(i) => {
+                  set(i)
+              });
+          }
+
+          await d.deferUpdate();
+          set(d)
+      });
+    }
   },
 };
