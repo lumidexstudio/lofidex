@@ -1,5 +1,5 @@
 const { AudioPlayerStatus, getVoiceConnection } = require('@discordjs/voice');
-const { ActionRowBuilder, ButtonStyle, ButtonBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonStyle, ButtonBuilder, ComponentType } = require('discord.js');
 
 module.exports = {
     name: "volume",
@@ -27,7 +27,7 @@ module.exports = {
             let volumeRow = new ActionRowBuilder().addComponents(btns['20'], btns['40'], btns['60'], btns['80'], btns['100']);
     
             let msg = await message.channel.send({ content: "no args provided, you can use the buttons bellow. Now: " + player.state.resource.volume.volume * 100 + "%", components: [volumeRow]});
-            const collector = message.channel.createMessageComponentCollector({ time: 120000 });
+            const collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
             collector.on('collect', async(d) => {
                 const set = async(x) => {
                     await player.state.resource.volume.setVolume(Number(x.customId) / 100);

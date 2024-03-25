@@ -6,7 +6,7 @@ const getCurrentlyPlayingTime = require('../../../lib/getCurrentPlayingTime');
 const createProgressBar = require('../../../lib/createProgressBar');
 const { default: getAudioDurationInSeconds } = require('get-audio-duration');
 const { ButtonBuilder, ButtonStyle } = require('discord.js');
-const { ActionRowBuilder } = require('discord.js');
+const { ActionRowBuilder, ComponentType } = require('discord.js');
 const { AudioPlayerStatus } = require('@discordjs/voice');
 const skipMusic = require('../../../lib/music/skip');
 
@@ -46,7 +46,7 @@ module.exports = {
     let row = new ActionRowBuilder().addComponents(btns.skip, btns.stop);
     let msg = await message.channel.send({ embeds: [embed], components: [row] });
 
-    const collector = message.channel.createMessageComponentCollector({ time: 120000 });
+    const collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
     collector.on("collect", async (d) => {
       const set = async (x) => {
         if(x.customId === 'pause') {
@@ -75,7 +75,7 @@ module.exports = {
         }
 
         msg.edit({ embeds: [embed], components: [row] })
-        const collector2 = message.channel.createMessageComponentCollector({ time: 120000 });
+        const collector2 = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
         collector2.on("collect", async (i) => {
           set(i);
         });

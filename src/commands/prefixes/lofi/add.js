@@ -5,7 +5,7 @@ const { StreamType } = require("@discordjs/voice");
 const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
-const { ActionRowBuilder, ButtonStyle, ButtonBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonStyle, ButtonBuilder, ComponentType } = require('discord.js');
 const getCurrentlyPlayingTime = require("../../../lib/getCurrentPlayingTime");
 
 const addAmbient = async (message, con, argsAmbient) => {
@@ -133,7 +133,7 @@ module.exports = {
       }
 
       let msg = await message.channel.send({ content: `no args provided, you can use the buttons bellow. Now: ${ambientsNow.join(", ")}`, components: [row] });
-      const collector = message.channel.createMessageComponentCollector({ time: 120000 });
+      const collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
       collector.on('collect', async(d) => {
           const set = async(x) => {
               let ambientsOld = await message.client.db.get(`vc.${message.guild.id}.ambients`);
