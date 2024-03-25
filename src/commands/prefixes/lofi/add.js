@@ -100,6 +100,8 @@ module.exports = {
   category: "lofi",
   args: ["<ambient?>"],
   async execute(message, args) {
+    let host = await message.client.db.get(`vc.${message.guild.id}.master`);
+    
     const voiceChannelId = message.member.voice.channelId;
     if (!voiceChannelId) return message.reply("You are not in voice channel");
 
@@ -164,7 +166,7 @@ module.exports = {
               ephemeral: true,
             });
           }
-          
+
           set(d)
       });
     }
