@@ -16,7 +16,7 @@ module.exports = {
     await getVoiceConnection(message.guild.id).disconnect();
     await message.client.db.delete(`vc.${message.guild.id}`);
 
-    let embed = new EmbedBuilder().setTitle("Disconnected").setTimestamp().setColor("Random");
-    message.reply({ embeds: [embed] });
+    let embed = new EmbedBuilder().setTitle("Disconnected").setColor("Random");
+    message.replyWithoutMention({ embeds: [embed] });
   },
 };
