@@ -106,11 +106,9 @@ module.exports = {
     
     let host = await message.client.db.get(`vc.${message.guild.id}.master`);
     
-    const voiceChannelId = message.member.voice.channelId;
-    if (!voiceChannelId) return message.reply("You are not in voice channel");
-
-    const voiceChannel = message.guild.channels.cache.get(voiceChannelId);
-    if (!voiceChannel) return message.reply("No voice channel were found");
+    let getdb = await message.client.db.get(`vc.${message.guild.id}`);
+    if(getdb.master !== message.member.user.id) return message.reply(`you are not the user that using the play command previously`)
+    if(getdb.channel !== message.member.voice.channelId) return message.reply(`we are not in the same vc`);
 
     const connection = getVoiceConnection(message.guild.id);
     

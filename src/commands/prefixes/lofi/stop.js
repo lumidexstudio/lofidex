@@ -7,7 +7,8 @@ module.exports = {
   cooldown: 1,
   category: "lofi",
   async execute(message) {
-    if (!message.client.voice.adapters.has(message.guild.id)) return message.reply(`bot not in vc`);
+    let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);
+    if(!isplaying) return message.reply("does'nt play any song rn");
 
     let getdb = await message.client.db.get(`vc.${message.guild.id}`);
     if (getdb.master !== message.member.user.id) return message.reply(`you are not the user that using the play command previously`);

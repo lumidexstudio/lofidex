@@ -2,8 +2,8 @@ const { AudioPlayerStatus } = require('@discordjs/voice');
 const { getVoiceConnection } = require('@discordjs/voice');
 
 module.exports = {
-    name: "pause",
-    description: "pause or unpause the current playing song!",
+    name: "resume",
+    description: "resume the current paused song!",
     cooldown: 1,
     category: "lofi",
     async execute(message) {
@@ -15,7 +15,7 @@ module.exports = {
         if(getdb.channel !== message.member.voice.channelId) return message.reply(`we are not in the same vc`);
         
         let player = getVoiceConnection(message.guild.id).state.subscription.player;
-        player.pause();
-        message.reply("paused")
+        player.unpause();
+        message.reply("unpaused");
     }
 }

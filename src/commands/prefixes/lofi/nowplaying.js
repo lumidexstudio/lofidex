@@ -18,10 +18,11 @@ module.exports = {
   async execute(message) {
     let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);
     if(!isplaying) return message.reply("does'nt play any song rn");
+    
+    let getdb = await message.client.db.get(`vc.${message.guild.id}`);
+    if (getdb.channel !== message.member.voice.channelId) return message.reply(`we are not in the same vc`);
 
-    let host = await message.client.db.get(`vc.${message.guild.id}.master`);
-    let now = await message.client.db.get(`vc.${message.guild.id}.now`);
-    let detail = songlist[now];
+    let detail = songlist[getdb.now];
 
     let connection = await getVoiceConnection(message.guild.id);
     let dur = await getAudioDurationInSeconds(detail.path);
@@ -42,7 +43,6 @@ module.exports = {
       skip: new ButtonBuilder().setCustomId('skip').setLabel('Skip').setEmoji("⏭").setStyle(ButtonStyle.Primary),
     }
 
-    // buggy btns.pause
     let row = new ActionRowBuilder().addComponents(btns.pause, btns.skip, btns.stop);
     let msg = await message.channel.send({ embeds: [embed], components: [row] });
 
@@ -77,7 +77,7 @@ module.exports = {
       };
 
       await d.deferUpdate();
-      if(d.user.id !== host) {
+      if(d.user.id !== getdb.master) {
         return d.followUp({
           content: `${d.user.username}, only host can use this button.`,
           ephemeral: true,
