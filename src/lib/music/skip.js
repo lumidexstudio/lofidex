@@ -1,6 +1,6 @@
 const { createAudioResource } = require("@discordjs/voice");
 
-async function skipMusic(message, player) {
+async function skipMusic(message, player, shouldSendEmbed = true) {
     let list = require("../../lofi");
     let now = await message.client.db.get(`vc.${message.guild.id}.now`);
 
@@ -20,6 +20,7 @@ async function skipMusic(message, player) {
         source: song.source,
         cover: song.cover,
         path: song.path,
+        shouldSendEmbed,
         index: list.findIndex((item) => item.title == song.title),
       },
       inlineVolume: true,

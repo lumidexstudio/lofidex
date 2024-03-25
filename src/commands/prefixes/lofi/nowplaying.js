@@ -51,6 +51,7 @@ module.exports = {
       const set = async (x) => {
         if(x.customId === 'pause') {
           let player = connection.state.subscription.player;
+          player.state.resource.metadata.shouldSendEmbed = false;
           if(player.state.status === AudioPlayerStatus.Paused) {
               player.unpause();
               btns.pause.setStyle(ButtonStyle.Secondary).setLabel('Pause').setEmoji("⏸");
@@ -61,7 +62,7 @@ module.exports = {
         } else if(x.customId === 'stop') {
           collector.stop('disconnect');
         } else if(x.customId === 'skip') {
-          await skipMusic(message, connection.state.subscription.player);
+          await skipMusic(message, connection.state.subscription.player, false);
           let now = await message.client.db.get(`vc.${message.guild.id}.now`);
           let detail = songlist[now];
           embed.setTitle(detail.title + " by " + detail.author)

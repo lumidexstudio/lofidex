@@ -20,26 +20,13 @@ async function genMusic(message, player) {
         source: song.source,
         cover: song.cover,
         path: song.path,
+        shouldSendEmbed: true,
         index: list.findIndex((item) => item.title == song.title),
       },
       inlineVolume: true,
     });
 
     player.play(res);
-
-    let songDuration = await getAudioDurationInSeconds(song.path);
-    let sourceButton = new ButtonBuilder().setLabel("Source").setURL(song.source).setStyle(ButtonStyle.Link);
-
-    let row = new ActionRowBuilder().addComponents(sourceButton);
-
-    embed = embed
-      .setAuthor({ name: `Playing ${song.title}` })
-      .setDescription(`By: ${song.author}\nDuration: ${humanizeTime(Math.ceil(songDuration))}`)
-      .setThumbnail(song.cover)
-      .setTimestamp();
-
-    message.channel.send({ embeds: [embed], components: [row] });
-
     await message.client.db.set(`vc.${message.guild.id}.now`, idx);
   } else {
     let now = await message.client.db.get(`vc.${message.guild.id}.now`);
@@ -59,24 +46,13 @@ async function genMusic(message, player) {
         source: song.source,
         cover: song.cover,
         path: song.path,
+        shouldSendEmbed: true,
         index: list.findIndex((item) => item.title == song.title),
       },
       inlineVolume: true,
     });
 
     player.play(res);
-    let songDuration = await getAudioDurationInSeconds(song.path);
-    let sourceButton = new ButtonBuilder().setLabel("Source").setURL(song.source).setStyle(ButtonStyle.Link);
-
-    let row = new ActionRowBuilder().addComponents(sourceButton);
-
-    embed = embed
-      .setAuthor({ name: `Playing ${song.title}` })
-      .setDescription(`By: ${song.author}\nDuration: ${humanizeTime(Math.ceil(songDuration))}`)
-      .setThumbnail(song.cover)
-      .setTimestamp();
-
-    message.channel.send({ embeds: [embed], components: [row] });
   }
 }
 
@@ -110,11 +86,30 @@ module.exports = {
 
       let embed = new EmbedBuilder().setColor("Random").setAuthor({ name: "Loading" }).setDescription(italic("Preparing..."));
       player.on(AudioPlayerStatus.Buffering, async () => {
+        let song = connection.state.subscription.player.state.resource.metadata;
+        
+        if(!song.shouldSendEmbed) return;
         embed.setAuthor({ name: "Buffering" }).setDescription("Please wait until song are played").setThumbnail(null);
         message.replyWithoutMention({ embeds: [embed] });
       });
 
-      player.on(AudioPlayerStatus.Playing, async () => {});
+      player.on(AudioPlayerStatus.Playing, async () => {
+        let song = connection.state.subscription.player.state.resource.metadata;
+
+        if(!song.shouldSendEmbed) return;
+        let songDuration = await getAudioDurationInSeconds(song.path);
+        let sourceButton = new ButtonBuilder().setLabel("Source").setURL(song.source).setStyle(ButtonStyle.Link);
+
+        let row = new ActionRowBuilder().addComponents(sourceButton);
+
+        embed = embed
+          .setAuthor({ name: `Playing ${song.title}` })
+          .setDescription(`By: ${song.author}\nDuration: ${humanizeTime(Math.ceil(songDuration))}`)
+          .setThumbnail(song.cover)
+          .setTimestamp();
+
+        message.channel.send({ embeds: [embed], components: [row] });
+      });
 
       player.on("error", (error) => {
         console.error(error);
