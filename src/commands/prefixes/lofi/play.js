@@ -8,7 +8,8 @@ async function genMusic(message, player) {
   let checkNow = await message.client.db.has(`vc.${message.guild.id}.now`);
 
   if (!checkNow) {
-    const song = list[Math.floor(Math.random() * list.length)];
+    const idx = Math.floor(Math.random() * list.length);
+    const song = list[idx];
     const res = createAudioResource(song.path, {
       metadata: {
         title: song.title,
@@ -22,7 +23,7 @@ async function genMusic(message, player) {
     });
 
     player.play(res);
-    await message.client.db.set(`vc.${message.guild.id}.now`, 0);
+    await message.client.db.set(`vc.${message.guild.id}.now`, idx);
   } else {
     let now = await message.client.db.get(`vc.${message.guild.id}.now`);
     let song = list[now + 1];
