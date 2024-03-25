@@ -100,6 +100,9 @@ module.exports = {
   category: "lofi",
   args: ["<ambient?>"],
   async execute(message, args) {
+    let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);
+    if(!isplaying) return message.reply("does'nt play any song rn");
+    
     let host = await message.client.db.get(`vc.${message.guild.id}.master`);
     
     const voiceChannelId = message.member.voice.channelId;
