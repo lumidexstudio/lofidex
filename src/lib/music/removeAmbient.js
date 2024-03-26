@@ -37,7 +37,7 @@ const removeAmbient = async (message, con, argsAmbient) => {
           const res = createAudioResource(`temp/${message.guild.id}/${song.title}-cut.mp3`, {
             inputType: StreamType.Raw,
             inlineVolume: true,
-            metadata: { title: song.title, author: song.author, source: song.source, path: song.path, cover: song.cover, index: list.findIndex((item) => item.title == song.title) },
+            metadata: { ...song, index: list.findIndex((item) => item.title == song.title) },
           });
           con.state.subscription.player.play(res);
           msg.edit({ embeds: [successEmbed('Ambient removed successfully!')] })
@@ -106,7 +106,7 @@ const removeAmbient = async (message, con, argsAmbient) => {
             const res = createAudioResource(path, {
               inputType: StreamType.Raw,
               inlineVolume: true,
-              metadata: { title: song.title, author: song.author, source: song.source, path: song.path, cover: song.cover, index: list.findIndex((item) => item.title == song.title) },
+              metadata: { ...song, index: list.findIndex((item) => item.title == song.title) },
             });
   
             con.state.subscription.player.play(res);

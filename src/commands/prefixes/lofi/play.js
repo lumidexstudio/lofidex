@@ -4,7 +4,7 @@ const { EmbedBuilder, ButtonBuilder, ButtonStyle, italic } = require("discord.js
 const { getAudioDurationInSeconds } = require("get-audio-duration");
 const humanizeTime = require("../../../lib/humanizeTime");
 const { errorEmbed, infoEmbed } = require("../../../lib/embed");
-const fs = require('fs');
+const fs = require("fs");
 
 async function genMusic(message, player) {
   let list = require("../../../lofi");
@@ -15,11 +15,7 @@ async function genMusic(message, player) {
     const song = list[idx];
     const res = createAudioResource(song.path, {
       metadata: {
-        title: song.title,
-        author: song.author,
-        source: song.source,
-        cover: song.cover,
-        path: song.path,
+        ...song,
         shouldSendEmbed: true,
         index: list.findIndex((item) => item.title == song.title),
       },
@@ -41,11 +37,7 @@ async function genMusic(message, player) {
 
     const res = createAudioResource(song.path, {
       metadata: {
-        title: song.title,
-        author: song.author,
-        source: song.source,
-        cover: song.cover,
-        path: song.path,
+        ...song,
         shouldSendEmbed: true,
         index: list.findIndex((item) => item.title == song.title),
       },
@@ -63,12 +55,12 @@ module.exports = {
   category: "lofi",
   async execute(message) {
     const voiceChannelId = message.member.voice.channelId;
-    if (!voiceChannelId) return message.replyWithoutMention({ embeds: [errorEmbed('You must be on the voice channel first!')] });
+    if (!voiceChannelId) return message.replyWithoutMention({ embeds: [errorEmbed("You must be on the voice channel first!")] });
 
     const voiceChannel = message.guild.channels.cache.get(voiceChannelId);
-    if (!voiceChannel) return message.replyWithoutMention({ embeds: [errorEmbed(`Voice channel not found`) ]});
+    if (!voiceChannel) return message.replyWithoutMention({ embeds: [errorEmbed(`Voice channel not found`)] });
 
-    if (message.client.voice.adapters.has(message.guild.id)) return message.replyWithoutMention({ embeds: [infoEmbed('Lofidex is already on the voice channel and is probably playing lofi.') ]});
+    if (message.client.voice.adapters.has(message.guild.id)) return message.replyWithoutMention({ embeds: [infoEmbed("Lofidex is already on the voice channel and is probably playing lofi.")] });
 
     if (!fs.existsSync(`temp/${message.guild.id}`)) {
       fs.mkdirSync(`temp/${message.guild.id}`);
@@ -91,8 +83,8 @@ module.exports = {
       let embed = new EmbedBuilder().setColor("Random").setAuthor({ name: "Loading" }).setDescription(italic("Preparing..."));
       player.on(AudioPlayerStatus.Buffering, async () => {
         let song = connection.state.subscription.player.state.resource.metadata;
-        
-        if(!song.shouldSendEmbed) return;
+
+        if (!song.shouldSendEmbed) return;
         embed.setAuthor({ name: "Buffering" }).setDescription("Please wait until song are played").setThumbnail(null);
         message.replyWithoutMention({ embeds: [embed] });
       });
@@ -100,7 +92,7 @@ module.exports = {
       player.on(AudioPlayerStatus.Playing, async () => {
         let song = connection.state.subscription.player.state.resource.metadata;
 
-        if(!song.shouldSendEmbed) return;
+        if (!song.shouldSendEmbed) return;
         let songDuration = await getAudioDurationInSeconds(song.path);
         let sourceButton = new ButtonBuilder().setLabel("Source").setURL(song.source).setStyle(ButtonStyle.Link);
 

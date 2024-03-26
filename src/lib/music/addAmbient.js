@@ -80,7 +80,9 @@ const addAmbient = async (message, con, argsAmbient) => {
             const res = createAudioResource(path, {
               inputType: StreamType.Raw,
               inlineVolume: true,
-              metadata: { title: song.title, author: song.author, source: song.source, path: song.path, cover: song.cover, index: list.findIndex((item) => item.title == song.title) },
+              metadata: { 
+                ...song,
+                 index: list.findIndex((item) => item.title == song.title) },
             });
   
             con.state.subscription.player.play(res);
