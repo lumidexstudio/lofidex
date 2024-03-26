@@ -13,7 +13,8 @@ const { errorEmbed } = require('../../../lib/embed');
 
 module.exports = {
   name: "nowplaying",
-  description: "get current playing song detail!",
+  description: "Get details of the currently playing song.",
+  aliases: ['np'],
   cooldown: 1,
   category: "lofi",
   async execute(message) {

@@ -9,8 +9,9 @@ const { errorEmbed } = require("../../../lib/embed");
 
 module.exports = {
   name: "skip",
-  description: "skip current song",
-  cooldown: 1,
+  description: "Skips the currently playing song and continues to the song after it.",
+  aliases: ['next'],
+  cooldown: 8,
   category: "lofi",
   async execute(message) {
     let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);

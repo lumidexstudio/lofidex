@@ -4,9 +4,11 @@ const { errorEmbed, infoEmbed, successEmbed } = require('../../../lib/embed');
 
 module.exports = {
     name: "volume",
-    description: "set volume",
+    description: "Controls the volume of the music being played.",
+    aliases: ['vol'],
     cooldown: 1,
     category: "lofi",
+    args: ['<volume?>'],
     async execute(message, args) {
         let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);
         if(!isplaying) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });

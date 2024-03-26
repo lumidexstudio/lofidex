@@ -7,7 +7,8 @@ const removeAmbient = require("../../../lib/music/removeAmbient");
 
 module.exports = {
   name: "add",
-  description: "adding ambient sound effect",
+  description: "Adds ambient to the currently playing song.",
+  aliases: ['addambient', 'ambient'],
   cooldown: 1,
   category: "lofi",
   args: ["<ambient?>"],

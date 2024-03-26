@@ -4,8 +4,8 @@ const { errorEmbed, successEmbed } = require('../../../lib/embed');
 
 module.exports = {
     name: "resume",
-    description: "resume the current paused song!",
-    cooldown: 1,
+    description: "Resume the song that was paused.",
+    cooldown: 3,
     category: "lofi",
     async execute(message) {
         let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);

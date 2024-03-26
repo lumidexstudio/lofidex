@@ -5,8 +5,8 @@ const fs = require("fs");
 
 module.exports = {
   name: "stop",
-  description: "stop playing!",
-  cooldown: 1,
+  description: "Stops the music being played.",
+  cooldown: 6,
   category: "lofi",
   async execute(message) {
     let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);

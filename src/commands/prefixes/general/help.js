@@ -5,10 +5,10 @@ const { noteEmbed } = require("../../../lib/embed");
 module.exports = {
     name: "help",
     description: "Bot command list or help menu.",
-    aliases: ['menu'],
+    aliases: ['menu', '?'],
     cooldown: 1,
     category: "general",
-    args: ["<cmd?>"],
+    args: ["<command?>"],
     async execute(message, args) {
         let client = message.client;
         if(args.length) {

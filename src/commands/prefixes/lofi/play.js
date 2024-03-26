@@ -50,8 +50,9 @@ async function genMusic(message, player) {
 
 module.exports = {
   name: "play",
-  description: "start playing!",
-  cooldown: 1,
+  description: "start playing a song.",
+  aliases: ['p'],
+  cooldown: 3,
   category: "lofi",
   async execute(message) {
     const voiceChannelId = message.member.voice.channelId;
