@@ -4,12 +4,11 @@ const { EmbedBuilder, ButtonBuilder, ButtonStyle, italic } = require("discord.js
 const { getAudioDurationInSeconds } = require("get-audio-duration");
 const humanizeTime = require("../../../lib/humanizeTime");
 const { errorEmbed, infoEmbed } = require("../../../lib/embed");
+const fs = require('fs');
 
 async function genMusic(message, player) {
   let list = require("../../../lofi");
   let checkNow = await message.client.db.has(`vc.${message.guild.id}.now`);
-
-  let embed = new EmbedBuilder().setColor("Random");
 
   if (!checkNow) {
     const idx = Math.floor(Math.random() * list.length);
@@ -70,6 +69,10 @@ module.exports = {
     if (!voiceChannel) return message.replyWithoutMention({ embeds: [errorEmbed(`Voice channel not found`) ]});
 
     if (message.client.voice.adapters.has(message.guild.id)) return message.replyWithoutMention({ embeds: [infoEmbed('Lofidex is already on the voice channel and is probably playing lofi.') ]});
+
+    if (!fs.existsSync(`temp/${message.guild.id}`)) {
+      fs.mkdirSync(`temp/${message.guild.id}`);
+    }
 
     const connection = joinVoiceChannel({
       channelId: voiceChannel.id,

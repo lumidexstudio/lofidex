@@ -1,6 +1,7 @@
 const { getVoiceConnection } = require("@discordjs/voice");
 const { EmbedBuilder } = require("discord.js");
 const { errorEmbed, successEmbed } = require("../../../lib/embed");
+const fs = require('fs');
 
 module.exports = {
   name: "stop",
@@ -15,7 +16,11 @@ module.exports = {
     if (getdb.master !== message.member.user.id) return message.replyWithoutMention({ embeds: [errorEmbed('Only the DJ can control using this command.')] });
     if (getdb.channel !== message.member.voice.channelId) return message.replyWithoutMention({ embeds: [errorEmbed(`We are not in the same voice channel!`)] });
 
-    await getVoiceConnection(message.guild.id).disconnect();
+    let connection = getVoiceConnection(message.guild.id);
+    if(!connection) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });
+
+    await connection.disconnect();
+    await fs.rmSync(`temp/${message.guild.id}`, { recursive: true, force: true });
     await message.client.db.delete(`vc.${message.guild.id}`);
     message.replyWithoutMention({ embeds: [successEmbed('Disconnected')] });
   },

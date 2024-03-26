@@ -21,6 +21,8 @@ module.exports = {
     if (getdb.channel !== message.member.voice.channelId) return message.replyWithoutMention({ embeds: [errorEmbed(`We are not in the same voice channel!`)] });
 
     const connection = getVoiceConnection(message.guild.id);
+    if(!connection) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });
+    
     await skipMusic(message, connection.state.subscription.player);
   },
 };

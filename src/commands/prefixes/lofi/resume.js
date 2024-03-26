@@ -15,8 +15,10 @@ module.exports = {
         if(getdb.master !== message.member.user.id) return message.replyWithoutMention({ embeds: [errorEmbed('Only the DJ can control using this command.')] })
         if(getdb.channel !== message.member.voice.channelId) return message.replyWithoutMention({ embeds: [errorEmbed(`We are not in the same voice channel!`)] });
         
-        let player = getVoiceConnection(message.guild.id).state.subscription.player;
-        player.unpause();
+        let connection = getVoiceConnection(message.guild.id);
+        if(!connection) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });
+        
+        connection.state.subscription.player.pause();
         message.replyWithoutMention({ embeds: [successEmbed('Resumed!')] });
     }
 }

@@ -26,6 +26,8 @@ module.exports = {
     let detail = songlist[getdb.now];
 
     let connection = await getVoiceConnection(message.guild.id);
+    if(!connection) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });
+
     let dur = await getAudioDurationInSeconds(detail.path);
     let nowin = getCurrentlyPlayingTime(connection);
 
