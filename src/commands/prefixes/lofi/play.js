@@ -5,6 +5,7 @@ const { getAudioDurationInSeconds } = require("get-audio-duration");
 const humanizeTime = require("../../../lib/humanizeTime");
 const { errorEmbed, infoEmbed } = require("../../../lib/embed");
 const fs = require("fs");
+const restoreAmbient = require("../../../lib/music/restoreAmbient");
 
 async function genMusic(message, player) {
   let list = require("../../../lofi");
@@ -51,7 +52,7 @@ async function genMusic(message, player) {
 module.exports = {
   name: "play",
   description: "start playing a song.",
-  aliases: ['p'],
+  aliases: ["p"],
   cooldown: 3,
   category: "lofi",
   async execute(message) {
@@ -112,8 +113,13 @@ module.exports = {
         console.error(error);
       });
 
-      player.on(AudioPlayerStatus.Idle, () => {
-        genMusic(message, player, connection);
+      player.on(AudioPlayerStatus.Idle, async () => {
+        await genMusic(message, player, connection);
+        restoreAmbient(message, connection)
+          .then((result) => {
+            player.play(result);
+          })
+          .catch((error) => console.log(error));
       });
     });
 
