@@ -11,9 +11,14 @@ async function genMusic(message, player) {
   let list = require("../../../lofi");
   let checkNow = await message.client.db.has(`vc.${message.guild.id}.now`);
 
+  let ambients = await message.client.db.get(`vc.${message.guild.id}.ambients`);
+
   if (!checkNow) {
     const idx = Math.floor(Math.random() * list.length);
     const song = list[idx];
+
+    if (ambients.length > 0) return list.findIndex((item) => item.title == song.title);
+
     const res = createAudioResource(song.path, {
       metadata: {
         ...song,
@@ -35,6 +40,8 @@ async function genMusic(message, player) {
     } else {
       await message.client.db.set(`vc.${message.guild.id}.now`, now + 1);
     }
+
+    if (ambients.length > 0) return list.findIndex((item) => item.title == song.title);
 
     const res = createAudioResource(song.path, {
       metadata: {
@@ -114,12 +121,14 @@ module.exports = {
       });
 
       player.on(AudioPlayerStatus.Idle, async () => {
-        await genMusic(message, player, connection);
-        restoreAmbient(message, connection)
-          .then((result) => {
-            player.play(result);
-          })
-          .catch((error) => console.log(error));
+        let songIndex = await genMusic(message, player, connection);
+        if (songIndex) {
+          restoreAmbient(message, songIndex)
+            .then((result) => {
+              player.play(result);
+            })
+            .catch((error) => console.log(error));
+        }
       });
     });
 

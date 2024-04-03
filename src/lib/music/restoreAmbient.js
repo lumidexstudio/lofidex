@@ -5,7 +5,7 @@ const ffmpeg = require("fluent-ffmpeg");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
 const { errorEmbed, loadingEmbed, successEmbed } = require("../embed");
 
-const restoreAmbient = async (message, con) => {
+const restoreAmbient = async (message, songIndex) => {
   let ambients = await message.client.db.get(`vc.${message.guild.id}.ambients`);
   if (!ambients) return;
 
@@ -14,7 +14,7 @@ const restoreAmbient = async (message, con) => {
   console.log("39", ambients);
 
   // Mendapatkan lagu yang sedang diputar
-  let song = list[con.state.subscription.player.state.resource.metadata.index];
+  let song = list[songIndex];
 
   let songdur = await getAudioDurationInSeconds(song.path);
 
