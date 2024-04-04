@@ -106,7 +106,11 @@ const removeAmbient = async (message, con, argsAmbient) => {
           const res = createAudioResource(path, {
             inputType: StreamType.Raw,
             inlineVolume: true,
-            metadata: { ...song, index: list.findIndex((item) => item.title == song.title) },
+            metadata: {
+              ...song,
+              mix_path: path,
+              index: list.findIndex((item) => item.title == song.title),
+            },
           });
 
           con.state.subscription.player.play(res);

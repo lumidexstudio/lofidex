@@ -75,6 +75,7 @@ const restoreAmbient = async (message, songIndex) => {
           inlineVolume: true,
           metadata: {
             ...song,
+            mix_path: path,
             index: list.findIndex((item) => item.title == song.title),
           },
         });

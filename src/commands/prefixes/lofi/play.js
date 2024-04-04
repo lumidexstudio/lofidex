@@ -6,6 +6,7 @@ const humanizeTime = require("../../../lib/humanizeTime");
 const { errorEmbed, infoEmbed } = require("../../../lib/embed");
 const fs = require("fs");
 const restoreAmbient = require("../../../lib/music/restoreAmbient");
+const loop = require("../../../lib/music/loop");
 
 async function genMusic(message, player) {
   let list = require("../../../lofi");
@@ -82,7 +83,20 @@ module.exports = {
     });
 
     connection.on(VoiceConnectionStatus.Ready, async () => {
-      message.client.db.set(`vc.${message.guild.id}`, { channel: voiceChannel.id, master: message.member.user.id, ambients: [], filtergraph: ["[0:a]volume=3[a0]"], filtergraph_last: 0, filtergraph_mix: "", filtergraph_mix_count: 1 });
+      message.client.db.set(`vc.${message.guild.id}`, {
+        channel: voiceChannel.id,
+        master: message.member.user.id,
+        ambients: [],
+        filtergraph: ["[0:a]volume=3[a0]"],
+        filtergraph_last: 0,
+        filtergraph_mix: "",
+        filtergraph_mix_count: 1,
+        repeat: {
+          state: false,
+          path: "",
+          song: null,
+        },
+      });
       console.log("bot connected - ready to play");
 
       const player = createAudioPlayer();
@@ -121,13 +135,18 @@ module.exports = {
       });
 
       player.on(AudioPlayerStatus.Idle, async () => {
-        let songIndex = await genMusic(message, player, connection);
-        if (songIndex) {
-          restoreAmbient(message, songIndex)
-            .then((result) => {
-              player.play(result);
-            })
-            .catch((error) => console.log(error));
+        let repeat = await message.client.db.get(`vc.${message.guild.id}.repeat`);
+        if (repeat.state) {
+          loop(message, player);
+        } else {
+          let songIndex = await genMusic(message, player, connection);
+          if (songIndex) {
+            restoreAmbient(message, songIndex)
+              .then((result) => {
+                player.play(result);
+              })
+              .catch((error) => console.log(error));
+          }
         }
       });
     });
