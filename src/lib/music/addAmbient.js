@@ -8,10 +8,10 @@ const getCurrentlyPlayingTime = require("../getCurrentPlayingTime");
 const { errorEmbed, loadingEmbed, successEmbed } = require("../embed");
 
 const addAmbient = async (message, con, argsAmbient) => {
-  if (!ambientList[argsAmbient]) return message.replyWithoutMention({ embeds: [errorEmbed("Ambient not found!")] });
+  if (!ambientList.find((item) => item.name == argsAmbient)) return message.replyWithoutMention({ embeds: [errorEmbed("Ambient not found!")] });
 
-  let getdb = await message.client.db.get(`vc.${message.guild.id}`)
-  let ambient = ambientList[argsAmbient][0];
+  let getdb = await message.client.db.get(`vc.${message.guild.id}`);
+  let ambient = ambientList.find((item) => item.name == argsAmbient);
 
   getdb.ambients.push(ambient.name);
   await message.client.db.set(`vc.${message.guild.id}.ambients`, getdb.ambients);
@@ -62,7 +62,8 @@ const addAmbient = async (message, con, argsAmbient) => {
       let command = ffmpeg().input(`temp/${message.guild.id}/${song.title}-cut.mp3`);
 
       for (const ambient of getdb.ambients) {
-        command.input(ambientList[ambient][0].path);
+        let ambientPath = ambientList.find((item) => item.name == ambient).path;
+        command.input(ambientPath);
       }
 
       command

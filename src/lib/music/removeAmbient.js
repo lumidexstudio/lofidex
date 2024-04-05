@@ -13,7 +13,7 @@ const removeAmbient = async (message, con, argsAmbient) => {
     return message.replyWithoutMention({ embeds: [errorEmbed("Ambient not found in the active list.")] });
   }
 
-  let ambient = ambientList[argsAmbient][0];
+  let ambient = ambientList.find((item) => item.name == argsAmbient);
   let list = require("../../lofi");
 
   ambients = ambients.filter((item) => item !== ambient.name);
@@ -94,7 +94,8 @@ const removeAmbient = async (message, con, argsAmbient) => {
       let command = ffmpeg().input(`temp/${message.guild.id}/${song.title}-cut.mp3`);
 
       for (const ambient of ambients) {
-        command.input(ambientList[ambient][0].path);
+        let ambientPath = ambientList.find((item) => item.name == ambient).path;
+        command.input(ambientPath);
       }
 
       command

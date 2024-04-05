@@ -24,7 +24,7 @@ const restoreAmbient = async (message, songIndex) => {
   await message.client.db.set(`vc.${message.guild.id}.filtergraph_mix_count`, 1);
 
   for (let ambient of ambients) {
-    ambient = ambientList[ambient][0];
+    ambient = ambientList.find((item) => item.name == ambient);
     let ambientdur = await getAudioDurationInSeconds(ambient.path);
     let loops = Math.ceil(songdur / ambientdur); // Jumlah loop
 
@@ -62,7 +62,8 @@ const restoreAmbient = async (message, songIndex) => {
     let res;
 
     for (const ambient of ambients) {
-      command.input(ambientList[ambient][0].path);
+      let ambientPath = ambientList.find((item) => item.name == ambient).path;
+      command.input(ambientPath);
     }
 
     command
