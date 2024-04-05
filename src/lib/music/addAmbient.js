@@ -1,5 +1,6 @@
 const { createAudioResource } = require("@discordjs/voice");
 const ambientList = require("../../ambient-sound");
+const list = require("../../lofi");
 const { StreamType } = require("@discordjs/voice");
 const ffmpeg = require("fluent-ffmpeg");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
@@ -8,15 +9,14 @@ const { errorEmbed, loadingEmbed, successEmbed } = require("../embed");
 
 const addAmbient = async (message, con, argsAmbient) => {
   if (!ambientList[argsAmbient]) return message.replyWithoutMention({ embeds: [errorEmbed("Ambient not found!")] });
-  let ambients = await message.client.db.get(`vc.${message.guild.id}.ambients`);
 
+  let getdb = await message.client.db.get(`vc.${message.guild.id}`)
   let ambient = ambientList[argsAmbient][0];
-  let list = require("../../lofi");
 
-  ambients.push(ambient.name);
-  await message.client.db.set(`vc.${message.guild.id}.ambients`, ambients);
+  getdb.ambients.push(ambient.name);
+  await message.client.db.set(`vc.${message.guild.id}.ambients`, getdb.ambients);
 
-  console.log("39", ambients);
+  console.log("39", getdb.ambients);
 
   // Mendapatkan lagu yang sedang diputar
   let song = list[con.state.subscription.player.state.resource.metadata.index];
@@ -32,21 +32,16 @@ const addAmbient = async (message, con, argsAmbient) => {
   let ambientdur = await getAudioDurationInSeconds(ambient.path);
   let loops = Math.ceil(songdur / ambientdur); // Jumlah loop
 
-  let hasfiltergraph = await message.client.db.get(`vc.${message.guild.id}.filtergraph`);
-  let lastfvar = await message.client.db.get(`vc.${message.guild.id}.filtergraph_last`);
-  let fmix = await message.client.db.get(`vc.${message.guild.id}.filtergraph_mix`);
-  let filtergraph = hasfiltergraph;
+  let fmix2 = getdb.filtergraph_mix || "";
 
-  let fmix2 = fmix ? fmix : "";
+  getdb.filtergraph.push(`[${getdb.ambients.length}:a]volume=${ambient.defaultVolume}[a${getdb.filtergraph_last + 1}]`);
+  getdb.filtergraph.push(`[${getdb.ambients.length}:a]aloop=loop=${loops}:size=1e6[a${getdb.filtergraph_last + 2}]`);
+  getdb.filtergraph.push(`[a${getdb.filtergraph_last + 2}]apad=whole_dur=10000,atrim=0:duration=${songdur}[a${getdb.filtergraph_last + 3}]`);
 
-  filtergraph.push(`[${ambients.length}:a]volume=${ambient.defaultVolume}[a${lastfvar + 1}]`);
-  filtergraph.push(`[${ambients.length}:a]aloop=loop=${loops}:size=1e6[a${lastfvar + 2}]`);
-  filtergraph.push(`[a${lastfvar + 2}]apad=whole_dur=10000,atrim=0:duration=${songdur}[a${lastfvar + 3}]`);
+  await message.client.db.set(`vc.${message.guild.id}.filtergraph_last`, getdb.filtergraph_last + 3);
+  await message.client.db.set(`vc.${message.guild.id}.filtergraph`, getdb.filtergraph);
 
-  await message.client.db.set(`vc.${message.guild.id}.filtergraph_last`, lastfvar + 3);
-  await message.client.db.set(`vc.${message.guild.id}.filtergraph`, filtergraph);
-
-  fmix2 += `[a${lastfvar + 1}][a${lastfvar + 3}]`;
+  fmix2 += `[a${getdb.filtergraph_last + 1}][a${getdb.filtergraph_last + 3}]`;
   await message.client.db.set(`vc.${message.guild.id}.filtergraph_mix`, fmix2);
   await message.client.db.add(`vc.${message.guild.id}.filtergraph_mix_count`, 2);
 
@@ -58,7 +53,6 @@ const addAmbient = async (message, con, argsAmbient) => {
 
   fg.push(`[a0]${fgm}amix=inputs=${fgmc}:duration=longest`);
 
-  console.log("137", fg);
   ffmpeg(song.path)
     .setStartTime(startOffset)
     .outputOptions("-preset", "fast")
@@ -67,7 +61,7 @@ const addAmbient = async (message, con, argsAmbient) => {
       // Setelah selesai memotong, mix audio dengan ambient sound
       let command = ffmpeg().input(`temp/${message.guild.id}/${song.title}-cut.mp3`);
 
-      for (const ambient of ambients) {
+      for (const ambient of getdb.ambients) {
         command.input(ambientList[ambient][0].path);
       }
 
