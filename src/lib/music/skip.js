@@ -1,4 +1,5 @@
 const { createAudioResource } = require("@discordjs/voice");
+const restoreAmbient = require("./restoreAmbient");
 
 async function skipMusic(message, player, shouldSendEmbed = true) {
   let list = require("../../lofi");
@@ -13,16 +14,30 @@ async function skipMusic(message, player, shouldSendEmbed = true) {
     await message.client.db.set(`vc.${message.guild.id}.now`, now + 1);
   }
 
-  const res = createAudioResource(song.path, {
-    metadata: {
-      ...song,
-      shouldSendEmbed,
-      index: list.findIndex((item) => item.title == song.title),
-    },
-    inlineVolume: true,
-  });
+  let ambients = await message.client.db.get(`vc.${message.guild.id}.ambients`);
 
-  player.play(res);
+  if (ambients.length > 0) {
+    restoreAmbient(
+      message,
+      list.findIndex((item) => item.title == song.title)
+    )
+      .then((res) => {
+        player.play(res);
+      })
+      .catch((error) => {
+        console.log(`[ERROR SKIP] ${error.message}`);
+      });
+  } else {
+    const res = createAudioResource(song.path, {
+      metadata: {
+        ...song,
+        shouldSendEmbed,
+        index: list.findIndex((item) => item.title == song.title),
+      },
+      inlineVolume: true,
+    });
+    player.play(res);
+  }
 }
 
 module.exports = skipMusic;

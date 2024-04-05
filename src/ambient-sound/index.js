@@ -3,7 +3,7 @@ const path = require("path");
 module.exports = {
   rains: [
     {
-      name: 'rains',
+      name: "rains",
       emoji: "🌧",
       title: "Short Rain Loop",
       source: "https://pixabay.com/sound-effects/short-rain-loop-101550/",
@@ -13,7 +13,7 @@ module.exports = {
   ],
   campfire: [
     {
-      name: 'campfire',
+      name: "campfire",
       emoji: "🔥",
       title: "",
       source: "",
@@ -23,7 +23,7 @@ module.exports = {
   ],
   birds: [
     {
-      name: 'birds',
+      name: "birds",
       emoji: "🐦",
       title: "",
       source: "",
@@ -33,7 +33,7 @@ module.exports = {
   ],
   blizzard: [
     {
-      name: 'blizzard',
+      name: "blizzard",
       emoji: "❄",
       title: "",
       source: "",
