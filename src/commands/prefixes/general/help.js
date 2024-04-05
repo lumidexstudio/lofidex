@@ -48,13 +48,11 @@ module.exports = {
 
         const embed = new EmbedBuilder({ fields })
           .setColor('Random')
+          .setDescription('Hellow, this bot is still in beta, and you may encounter some bugs. If you find any bugs, please report them with `ldxreport` command or join our support server... Your reports will really help the development of this bot ✨\n\nYou can use the `ldxhelp <command>` command to display information from the given command name.')
           .setAuthor({
             name:
-              "Command list " +
               client.user.username +
-              "#" +
-              client.user.discriminator,
-            iconURL: `https://cdn.discordapp.com/avatars/${client.config.clientID}/${client.user.avatar}.png`,
+              " Command List",
           });
 
         return message.replyWithoutMention({ embeds: [embed] });
