@@ -45,15 +45,16 @@ module.exports = {
           }
         });
 
-
         const embed = new EmbedBuilder({ fields })
           .setColor('Random')
+          .setImage(`https://storage.lumidex.id/lofidex/image/embedsbanner.png`)
           .setDescription('Hellow, this bot is still in beta, and you may encounter some bugs. If you find any bugs, please report them with `ldxreport` command or join our support server... Your reports will really help the development of this bot ✨\n\nYou can use the `ldxhelp <command>` command to display information from the given command name.')
           .setAuthor({
             name:
               client.user.username +
               " Command List",
-          });
+          })
+          .setFooter({ text: '🎵🎵🎵' });
 
         return message.replyWithoutMention({ embeds: [embed] });
     }
