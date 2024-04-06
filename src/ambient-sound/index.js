@@ -14,7 +14,7 @@ module.exports = [
     emoji: "🔥",
     title: "",
     source: "",
-    defaultVolume: 0.7,
+    defaultVolume: 1.7,
     path: path.join(__dirname, "campfire.ogg"),
   },
 
@@ -34,5 +34,21 @@ module.exports = [
     source: "",
     defaultVolume: 0.7,
     path: path.join(__dirname, "blizzard.ogg"),
+  },
+  {
+    name: "siren",
+    emoji: "🚨",
+    title: "Siren Noise FX",
+    source: "https://samplefocus.com/samples/siren-noise-fx",
+    defaultVolume: 0.7,
+    path: path.join(__dirname, "siren.wav"),
+  },
+  {
+    name: "vinyl-crackle",
+    emoji: "💿",
+    title: "Lo-Fi Vinyl Crackle",
+    source: "https://samplefocus.com/samples/lo-fi-vinyl-crackle",
+    defaultVolume: 0.7,
+    path: path.join(__dirname, "vinyl-crackle.wav"),
   },
 ];
