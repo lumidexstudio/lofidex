@@ -69,6 +69,10 @@ module.exports = {
           await skipMusic(message, connection.state.subscription.player, false);
           let now = await message.client.db.get(`vc.${message.guild.id}.now`);
           let detail = songlist[now];
+
+          let dur = await getAudioDurationInSeconds(detail.path);
+          let nowin = getCurrentlyPlayingTime(connection);
+
           embed.setTitle(detail.title + " by " + detail.author)
             .setURL(detail.source)
             .setThumbnail(detail.cover)
