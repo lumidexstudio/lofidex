@@ -13,10 +13,9 @@ const removeAmbient = async (message, con, argsAmbient) => {
     return message.replyWithoutMention({ embeds: [errorEmbed("Ambient not found in the active list.")] });
   }
 
-  let ambient = ambientList.find((item) => item.name == argsAmbient);
   let list = require("../../lofi");
 
-  ambients = ambients.filter((item) => item !== ambient.name);
+  ambients = ambients.filter((item) => item !== argsAmbient);
   await message.client.db.set(`vc.${message.guild.id}.ambients`, ambients);
 
   let song = list[con.state.subscription.player.state.resource.metadata.index];
@@ -28,7 +27,7 @@ const removeAmbient = async (message, con, argsAmbient) => {
 
   let msg = await message.channel.send({ embeds: [loadingEmbed(`removing ${argsAmbient} on playback ${startOffset} seconds`)] });
 
-  if (ambients <= 1) {
+  if (ambients.length <= 0) {
     ffmpeg(song.path)
       .setStartTime(startOffset)
       .outputOptions("-preset", "fast")
@@ -47,34 +46,36 @@ const removeAmbient = async (message, con, argsAmbient) => {
     return;
   }
 
-  con.state.subscription.player.pause();
-
   let songdur = await getAudioDurationInSeconds(song.path);
-  let ambientdur = await getAudioDurationInSeconds(ambient.path);
-  let loops = Math.ceil(songdur / ambientdur); // Jumlah loop
 
   await message.client.db.set(`vc.${message.guild.id}.filtergraph`, ["[0:a]volume=3[a0]"]);
   await message.client.db.set(`vc.${message.guild.id}.filtergraph_last`, 0);
   await message.client.db.set(`vc.${message.guild.id}.filtergraph_mix`, "");
   await message.client.db.set(`vc.${message.guild.id}.filtergraph_mix_count`, 1);
 
-  let hasfiltergraph = await message.client.db.get(`vc.${message.guild.id}.filtergraph`);
-  let lastfvar = await message.client.db.get(`vc.${message.guild.id}.filtergraph_last`);
-  let fmix = await message.client.db.get(`vc.${message.guild.id}.filtergraph_mix`);
-  let filtergraph = hasfiltergraph;
+  for (let ambient of ambients) {
+    ambient = ambientList.find((item) => item.name == ambient);
+    let ambientdur = await getAudioDurationInSeconds(ambient.path);
+    let loops = Math.ceil(songdur / ambientdur); // Jumlah loop
 
-  let fmix2 = fmix ? fmix : "";
+    let hasfiltergraph = await message.client.db.get(`vc.${message.guild.id}.filtergraph`);
+    let lastfvar = await message.client.db.get(`vc.${message.guild.id}.filtergraph_last`);
+    let fmix = await message.client.db.get(`vc.${message.guild.id}.filtergraph_mix`);
+    let filtergraph = hasfiltergraph;
 
-  filtergraph.push(`[${ambients.length}:a]volume=${ambient.defaultVolume}[a${lastfvar + 1}]`);
-  filtergraph.push(`[${ambients.length}:a]aloop=loop=${loops}:size=1e6[a${lastfvar + 2}]`);
-  filtergraph.push(`[a${lastfvar + 2}]apad=whole_dur=10000,atrim=0:duration=${songdur}[a${lastfvar + 3}]`);
+    let fmix2 = fmix ? fmix : "";
 
-  await message.client.db.set(`vc.${message.guild.id}.filtergraph_last`, lastfvar + 3);
-  await message.client.db.set(`vc.${message.guild.id}.filtergraph`, filtergraph);
+    filtergraph.push(`[${ambients.findIndex((item) => item == ambient.name) + 1}:a]volume=${ambient.defaultVolume}[a${lastfvar + 1}]`);
+    filtergraph.push(`[${ambients.findIndex((item) => item == ambient.name) + 1}:a]aloop=loop=${loops}:size=1e6[a${lastfvar + 2}]`);
+    filtergraph.push(`[a${lastfvar + 2}]apad=whole_dur=10000,atrim=0:duration=${songdur}[a${lastfvar + 3}]`);
 
-  fmix2 += `[a${lastfvar + 1}][a${lastfvar + 3}]`;
-  await message.client.db.set(`vc.${message.guild.id}.filtergraph_mix`, fmix2);
-  await message.client.db.add(`vc.${message.guild.id}.filtergraph_mix_count`, 2);
+    await message.client.db.set(`vc.${message.guild.id}.filtergraph_last`, lastfvar + 3);
+    await message.client.db.set(`vc.${message.guild.id}.filtergraph`, filtergraph);
+
+    fmix2 += `[a${lastfvar + 1}][a${lastfvar + 3}]`;
+    await message.client.db.set(`vc.${message.guild.id}.filtergraph_mix`, fmix2);
+    await message.client.db.add(`vc.${message.guild.id}.filtergraph_mix_count`, 2);
+  }
 
   let path = `temp/${message.guild.id}/${Date.now()}.mp3`;
 
