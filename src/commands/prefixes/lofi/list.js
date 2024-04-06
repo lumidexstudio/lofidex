@@ -3,9 +3,9 @@ const lofi = require("../../../lofi");
 module.exports = {
   name: "list",
   description: "list of all song",
+  category: "lofi",
   aliases: ["songlist"],
   cooldown: 1,
-
   async execute(message) {
     const embed = new EmbedBuilder()
       .setTitle(`List of Song available in ${message.client.user.username}`)
