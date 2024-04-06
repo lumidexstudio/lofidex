@@ -10,6 +10,7 @@ const { ActionRowBuilder, ComponentType } = require('discord.js');
 const { AudioPlayerStatus } = require('@discordjs/voice');
 const skipMusic = require('../../../lib/music/skip');
 const { errorEmbed } = require('../../../lib/embed');
+let collector;
 
 module.exports = {
   name: "nowplaying",
@@ -50,7 +51,11 @@ module.exports = {
     let row = new ActionRowBuilder().addComponents(btns.pause, btns.skip, btns.stop);
     let msg = await message.channel.send({ embeds: [embed], components: [row] });
 
-    const collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
+    if (collector && !collector.ended && collector.guildId === message.guild.id) {
+      collector.stop();
+    }
+
+    collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
     collector.on("collect", async (d) => {
       const set = async (x) => {
         if(x.customId === 'pause') {
