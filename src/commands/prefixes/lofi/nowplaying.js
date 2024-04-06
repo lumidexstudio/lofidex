@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, Collection } = require('discord.js');
 const songlist = require('../../../lofi');
 const { getVoiceConnection } = require('@discordjs/voice');
 const formatTime = require('../../../lib/formatTime');
@@ -10,7 +10,7 @@ const { ActionRowBuilder, ComponentType } = require('discord.js');
 const { AudioPlayerStatus } = require('@discordjs/voice');
 const skipMusic = require('../../../lib/music/skip');
 const { errorEmbed } = require('../../../lib/embed');
-let collector;
+const stop = require('../../../lib/music/stop');
 
 module.exports = {
   name: "nowplaying",
@@ -51,11 +51,13 @@ module.exports = {
     let row = new ActionRowBuilder().addComponents(btns.pause, btns.skip, btns.stop);
     let msg = await message.channel.send({ embeds: [embed], components: [row] });
 
-    if (collector && !collector.ended && collector.guildId === message.guild.id) {
-      collector.stop();
+    let col = message.client.nowplaying.get(message.guild.id);
+    if(col && !col.ended) {
+      col.stop();
     }
 
-    collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
+    let collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
+    message.client.nowplaying.set(message.guild.id, collector)
     collector.on("collect", async (d) => {
       const set = async (x) => {
         if(x.customId === 'pause') {
@@ -69,7 +71,8 @@ module.exports = {
               btns.pause.setStyle(ButtonStyle.Primary).setLabel('Resume').setEmoji("▶");
           }
         } else if(x.customId === 'stop') {
-          collector.stop('disconnect');
+          let coll = message.client.nowplaying.get(message.guild.id);
+          coll.stop('disconnect');
         } else if(x.customId === 'skip') {
           await skipMusic(message, connection.state.subscription.player, false);
           let now = await message.client.db.get(`vc.${message.guild.id}.now`);
@@ -103,8 +106,7 @@ module.exports = {
     collector.on('end', async(d, r) => {
       if(r === 'disconnect') {
         try {
-          connection.disconnect();
-          await message.client.db.delete(`vc.${message.guild.id}`);
+          await stop(connection, message)
 
           let embed = new EmbedBuilder().setTitle("Disconnected").setColor("Random");
           message.replyWithoutMention({ embeds: [embed] });

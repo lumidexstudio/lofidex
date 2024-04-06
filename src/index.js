@@ -21,6 +21,8 @@ client.prefixes = new Collection();
 client.cooldowns = new Collection();
 client.db = new QuickDB();
 
+client.nowplaying = new Collection();
+
 const slashPath = path.join(__dirname, "commands/slash");
 walk(slashPath, (x) => {
   let cmd = require(x);

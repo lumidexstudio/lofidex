@@ -2,6 +2,7 @@ const { getVoiceConnection } = require("@discordjs/voice");
 const { EmbedBuilder } = require("discord.js");
 const { errorEmbed, successEmbed } = require("../../../lib/embed");
 const fs = require("fs");
+const stop = require("../../../lib/music/stop");
 
 module.exports = {
   name: "stop",
@@ -19,9 +20,7 @@ module.exports = {
     let connection = getVoiceConnection(message.guild.id);
     if (!connection) return message.replyWithoutMention({ embeds: [errorEmbed("The bot is not playing music right now.")] });
 
-    connection.disconnect();
-    fs.rmSync(`temp/${message.guild.id}`, { recursive: true, force: true });
-    await message.client.db.delete(`vc.${message.guild.id}`);
+    await stop(connection, message);
     message.replyWithoutMention({ embeds: [successEmbed("Disconnected")] });
   },
 };
