@@ -1,6 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const walk = require('./lib/walk');
+const walk = require("./lib/walk");
 
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
 const { QuickDB } = require("quick.db");
@@ -12,12 +12,7 @@ if (!fs.existsSync("temp")) {
 }
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildVoiceStates,
-  ],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates],
 });
 
 client.config = require("../config");
