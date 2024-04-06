@@ -29,8 +29,12 @@ module.exports = {
     } else {
       let btns = {};
       let ambientsNow = await message.client.db.get(`vc.${message.guild.id}.ambients`);
+
+      let rows = [];
       let row = new ActionRowBuilder();
-      for (const ambient of ambientList) {
+
+      for (let i = 0; i < ambientList.length; i++) {
+        const ambient = ambientList[i];
         btns[ambient.name] = new ButtonBuilder().setCustomId(ambient.name).setLabel(ambient.name).setEmoji(ambient.emoji);
 
         if (ambientsNow.includes(ambient.name)) {
@@ -40,9 +44,14 @@ module.exports = {
         }
 
         row.addComponents(btns[ambient.name]);
+
+        if ((i + 1) % 5 === 0 || i === ambientList.length - 1) {
+          rows.push(row);
+          row = new ActionRowBuilder();
+        }
       }
 
-      let msg = await message.channel.send({ embeds: [infoEmbed(`Add some ambients? use the buttons below...\n\nCurrent ambients: ${inlineCode(ambientsNow.length ? ambientsNow.join("`, `") : "none")}`)], components: [row] });
+      let msg = await message.channel.send({ embeds: [infoEmbed(`Add some ambients? use the buttons below...\n\nCurrent ambients: ${inlineCode(ambientsNow.length ? ambientsNow.join("`, `") : "none")}`)], components: rows });
       const collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
       collector.on("collect", async (d) => {
         const set = async (x) => {
@@ -63,7 +72,7 @@ module.exports = {
             }
           });
 
-          msg.edit({ embeds: [infoEmbed(`Add some ambients? use the buttons below...\n\nCurrent ambients: ${inlineCode(ambientsNow.length ? ambientsNow.join("`, `") : "none")}`)], components: [row] });
+          msg.edit({ embeds: [infoEmbed(`Add some ambients? use the buttons below...\n\nCurrent ambients: ${inlineCode(ambientsNow.length ? ambientsNow.join("`, `") : "none")}`)], components: rows });
         };
 
         await d.deferUpdate();
