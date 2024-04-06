@@ -11,6 +11,8 @@ const addAmbient = async (message, con, argsAmbient) => {
   if (!ambientList.find((item) => item.name == argsAmbient)) return message.replyWithoutMention({ embeds: [errorEmbed("Ambient not found!")] });
 
   let getdb = await message.client.db.get(`vc.${message.guild.id}`);
+  if (getdb.ambients.includes(argsAmbient)) return message.replyWithoutMention({ embeds: [errorEmbed(`${argsAmbient} ambient already in use!`)] });
+
   let ambient = ambientList.find((item) => item.name == argsAmbient);
 
   getdb.ambients.push(ambient.name);
