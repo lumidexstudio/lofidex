@@ -51,4 +51,12 @@ module.exports = [
     defaultVolume: 0.7,
     path: path.join(__dirname, "vinyl-crackle.wav"),
   },
+  {
+    name: "waves",
+    emoji: "🌊",
+    title: "Lo-Fi Soft Beach Waves",
+    source: "https://pixabay.com/sound-effects/sandy-beach-calm-waves-water-nature-sounds-8052/",
+    defaultVolume: 0.7,
+    path: path.join(__dirname, "waves.mp3"),
+  },
 ];
