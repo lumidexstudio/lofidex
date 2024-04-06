@@ -1,7 +1,6 @@
 const { createAudioResource } = require("@discordjs/voice");
 const ambientList = require("../../ambient-sound");
 const { StreamType } = require("@discordjs/voice");
-const ffmpeg = require("fluent-ffmpeg");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
 const { errorEmbed, loadingEmbed, successEmbed } = require("../embed");
 
@@ -56,7 +55,7 @@ const restoreAmbient = async (message, songIndex) => {
   fg.push(`[a0]${fgm}amix=inputs=${fgmc}:duration=longest`);
 
   console.log("137", fg);
-  let command = ffmpeg().input(song.path);
+  let command = message.client.ffmpeg().input(song.path);
 
   return new Promise((resolve, reject) => {
     let res;

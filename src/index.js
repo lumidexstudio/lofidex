@@ -4,8 +4,12 @@ const walk = require("./lib/walk");
 
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
 const { QuickDB } = require("quick.db");
+
 const express = require("express");
 const app = express();
+
+const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(require('ffmpeg-ffprobe-static').ffmpegPath);
 
 if (!fs.existsSync("temp")) {
   fs.mkdirSync("temp");
@@ -20,6 +24,7 @@ client.slash = new Collection();
 client.prefixes = new Collection();
 client.cooldowns = new Collection();
 client.db = new QuickDB();
+client.ffmpeg = ffmpeg;
 
 client.nowplaying = new Collection();
 

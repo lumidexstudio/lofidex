@@ -1,7 +1,6 @@
 const { createAudioResource } = require("@discordjs/voice");
 const ambientList = require("../../ambient-sound");
 const { StreamType } = require("@discordjs/voice");
-const ffmpeg = require("fluent-ffmpeg");
 const { getAudioDurationInSeconds } = require("get-audio-duration");
 const { loadingEmbed, successEmbed, errorEmbed } = require("../embed");
 const getCurrentlyPlayingTime = require("../getCurrentPlayingTime");
@@ -28,7 +27,7 @@ const removeAmbient = async (message, con, argsAmbient) => {
   let msg = await message.channel.send({ embeds: [loadingEmbed(`removing ${argsAmbient} on playback ${startOffset} seconds`)] });
 
   if (ambients.length <= 0) {
-    ffmpeg(song.path)
+    message.client.ffmpeg(song.path)
       .setStartTime(startOffset)
       .outputOptions("-preset", "fast")
       .output(`temp/${message.guild.id}/${song.title}-cut.mp3`)
@@ -86,13 +85,13 @@ const removeAmbient = async (message, con, argsAmbient) => {
   fg.push(`[a0]${fgm}amix=inputs=${fgmc}:duration=longest`);
 
   console.log("137", fg);
-  ffmpeg(song.path)
+  message.client.ffmpeg(song.path)
     .setStartTime(startOffset)
     .outputOptions("-preset", "fast")
     .output(`temp/${message.guild.id}/${song.title}-cut.mp3`)
     .on("end", () => {
       // Setelah selesai memotong, mix audio dengan ambient sound
-      let command = ffmpeg().input(`temp/${message.guild.id}/${song.title}-cut.mp3`);
+      let command = message.client.ffmpeg().input(`temp/${message.guild.id}/${song.title}-cut.mp3`);
 
       for (const ambient of ambients) {
         let ambientPath = ambientList.find((item) => item.name == ambient).path;
