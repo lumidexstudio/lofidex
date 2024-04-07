@@ -1,9 +1,5 @@
 services:
   discord-bot:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    container_name: lofidex
-    restart: always
+    build: .
     ports:
-      - "3000:3000"
+      - "${PORT}:3000"
