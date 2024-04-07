@@ -11,6 +11,7 @@ const { AudioPlayerStatus } = require('@discordjs/voice');
 const skipMusic = require('../../../lib/music/skip');
 const { errorEmbed } = require('../../../lib/embed');
 const stop = require('../../../lib/music/stop');
+const stopAllCollectors = require('../../../lib/stopAllCollectors');
 
 module.exports = {
   name: "nowplaying",
@@ -51,11 +52,7 @@ module.exports = {
     let row = new ActionRowBuilder().addComponents(btns.pause, btns.skip, btns.stop);
     let msg = await message.channel.send({ embeds: [embed], components: [row] });
 
-    let col = message.client.nowplaying.get(message.guild.id);
-    if(col && !col.ended) {
-      col.stop();
-    }
-
+    await stopAllCollectors(message);
     let collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
     message.client.nowplaying.set(message.guild.id, collector)
     collector.on("collect", async (d) => {

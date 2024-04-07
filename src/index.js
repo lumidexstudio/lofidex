@@ -25,7 +25,11 @@ client.cooldowns = new Collection();
 client.db = new QuickDB();
 client.ffmpeg = ffmpeg;
 
+// collector purposes
 client.nowplaying = new Collection();
+client.addAmbient = new Collection();
+client.removeAmbient = new Collection();
+client.volume = new Collection();
 
 const slashPath = path.join(__dirname, "commands/slash");
 walk(slashPath, (x) => {

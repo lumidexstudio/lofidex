@@ -4,6 +4,7 @@ const { ActionRowBuilder, ButtonStyle, ButtonBuilder, ComponentType, inlineCode 
 const { errorEmbed, infoEmbed } = require("../../../lib/embed");
 const addAmbient = require("../../../lib/music/addAmbient");
 const removeAmbient = require("../../../lib/music/removeAmbient");
+const stopAllCollectors = require("../../../lib/stopAllCollectors");
 
 module.exports = {
   name: "add",
@@ -35,7 +36,7 @@ module.exports = {
 
       for (let i = 0; i < ambientList.length; i++) {
         const ambient = ambientList[i];
-        btns[ambient.name] = new ButtonBuilder().setCustomId(ambient.name).setLabel(ambient.name).setEmoji(ambient.emoji);
+        btns[ambient.name] = new ButtonBuilder().setCustomId('add_'+ambient.name).setLabel(ambient.name).setEmoji(ambient.emoji);
 
         if (ambientsNow.includes(ambient.name)) {
           btns[ambient.name].setStyle(ButtonStyle.Primary);
@@ -51,16 +52,18 @@ module.exports = {
         }
       }
 
+      await stopAllCollectors(message);
       let msg = await message.channel.send({ embeds: [infoEmbed(`Add some ambients? use the buttons below...\n\nCurrent ambients: ${inlineCode(ambientsNow.length ? ambientsNow.join("`, `") : "none")}`)], components: rows });
       const collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
+      message.client.addAmbient.set(message.guild.id, collector)
       collector.on("collect", async (d) => {
         const set = async (x) => {
           let ambientsOld = await message.client.db.get(`vc.${message.guild.id}.ambients`);
 
-          if (ambientsOld.includes(x.customId)) {
-            await removeAmbient(message, connection, x.customId);
+          if (ambientsOld.includes(x.customId.split("_")[1])) {
+            await removeAmbient(message, connection, x.customId.split("_")[1]);
           } else {
-            await addAmbient(message, connection, x.customId);
+            await addAmbient(message, connection, x.customId.split("_")[1]);
           }
 
           let ambientsNow = await message.client.db.get(`vc.${message.guild.id}.ambients`);
