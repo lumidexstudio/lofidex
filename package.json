@@ -10,7 +10,6 @@
 		"discord.js": "^14.14.1",
 		"dotenv": "^16.4.5",
 		"express": "^4.19.1",
-		"ffmpeg-ffprobe-static": "^6.1.1",
 		"fluent-ffmpeg": "^2.1.2",
 		"get-audio-duration": "^4.0.1",
 		"libsodium-wrappers": "^0.7.13",
