@@ -9,7 +9,7 @@ const express = require("express");
 const app = express();
 
 const ffmpeg = require('fluent-ffmpeg');
-// ffmpeg.setFfmpegPath(require('ffmpeg-ffprobe-static').ffmpegPath);
+ffmpeg.setFfmpegPath(require('ffmpeg-ffprobe-static').ffmpegPath);
 
 if (!fs.existsSync("temp")) {
   fs.mkdirSync("temp");
