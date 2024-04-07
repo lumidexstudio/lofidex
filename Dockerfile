@@ -3,12 +3,12 @@ FROM node:18-bullseye
 # Install FFmpeg
 RUN apt-get update && apt-get install -y ffmpeg
 
-WORKDIR /code
+WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
-
-EXPOSE 3000
 COPY . .
+RUN npm ci
 
-CMD ["npm", "start"]
+ARG PORT
+EXPOSE ${PORT:-3000}
+
+CMD ["npm", "run", "start"]

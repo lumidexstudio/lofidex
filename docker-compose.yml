@@ -1,5 +1,0 @@
-services:
-  discord-bot:
-    build: .
-    ports:
-      - "${PORT}:3000"
