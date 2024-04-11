@@ -1,6 +1,8 @@
+require('dotenv').config();
 const fs = require("node:fs");
 const path = require("node:path");
 const walk = require("./lib/walk");
+const toBoolean = require('./lib/toBoolean');
 
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
 const { QuickDB } = require("quick.db");
@@ -8,7 +10,11 @@ const { QuickDB } = require("quick.db");
 const express = require("express");
 const app = express();
 
-const ffmpeg = require('fluent-ffmpeg');
+let ffmpeg = require('fluent-ffmpeg');
+if(toBoolean(process.env.USE_STATIC_FFMPEG)) {
+  console.log("Using ffmpeg static!")
+  ffmpeg.setFfmpegPath(require('ffmpeg-ffprobe-static').ffmpegPath);
+}
 
 if (!fs.existsSync("temp")) {
   fs.mkdirSync("temp");
