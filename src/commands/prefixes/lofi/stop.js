@@ -1,5 +1,5 @@
 const { getVoiceConnection } = require("@discordjs/voice");
-const { EmbedBuilder } = require("discord.js");
+const { hyperlink, bold } = require("discord.js");
 const { errorEmbed, successEmbed } = require("../../../lib/embed");
 const fs = require("fs");
 const stop = require("../../../lib/music/stop");
@@ -21,6 +21,6 @@ module.exports = {
     if (!connection) return message.replyWithoutMention({ embeds: [errorEmbed("The bot is not playing music right now.")] });
 
     await stop(connection, message);
-    message.replyWithoutMention({ embeds: [successEmbed("Disconnected")] });
+    message.replyWithoutMention({ embeds: [successEmbed(`Disconnected\n\nThank you for using this bot. We are aware that many issues still exist. Come join our ${hyperlink(bold('Support Server'), message.client.config.supportServer)} to get information, updates and more.`)] });
   },
 };

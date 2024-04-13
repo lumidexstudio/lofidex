@@ -1,4 +1,4 @@
-const { EmbedBuilder, Collection } = require('discord.js');
+const { EmbedBuilder, bold, hyperlink } = require('discord.js');
 const songlist = require('../../../lofi');
 const { getVoiceConnection } = require('@discordjs/voice');
 const formatTime = require('../../../lib/formatTime');
@@ -9,7 +9,7 @@ const { ButtonBuilder, ButtonStyle } = require('discord.js');
 const { ActionRowBuilder, ComponentType } = require('discord.js');
 const { AudioPlayerStatus } = require('@discordjs/voice');
 const skipMusic = require('../../../lib/music/skip');
-const { errorEmbed } = require('../../../lib/embed');
+const { errorEmbed, successEmbed } = require('../../../lib/embed');
 const stop = require('../../../lib/music/stop');
 const stopAllCollectors = require('../../../lib/stopAllCollectors');
 
@@ -105,8 +105,7 @@ module.exports = {
         try {
           await stop(connection, message)
 
-          let embed = new EmbedBuilder().setTitle("Disconnected").setColor("Random");
-          message.replyWithoutMention({ embeds: [embed] });
+          message.replyWithoutMention({ embeds: [successEmbed(`Disconnected\n\nThank you for using this bot. We are aware that many issues still exist. Come join our ${hyperlink(bold('Support Server'), message.client.config.supportServer)} to get information, updates and more.`)] });
         } catch {
           console.log("err stop button now playing")
         }
