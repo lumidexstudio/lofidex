@@ -27,7 +27,7 @@ exports.dieEmbed = (message) => {
 exports.noteEmbed = (message) => {
     let embed = new EmbedBuilder()
             .setDescription(`<:lamp:1058246307749314620> ` + message)
-            .setColor('Purple');
+            .setColor('Fuchsia');
 
     return embed;
 }
@@ -35,7 +35,7 @@ exports.noteEmbed = (message) => {
 exports.loadingEmbed = (message) => {
     let embed = new EmbedBuilder()
             .setDescription(`<:hourglassicon:1058763743565193227> ` + message)
-            .setColor(`Purple`);
+            .setColor(`Fuchsia`);
 
     return embed;
 }
@@ -43,7 +43,7 @@ exports.loadingEmbed = (message) => {
 exports.infoEmbed = (message) => {
     let embed = new EmbedBuilder()
             .setDescription(`<:spark:1058788075154710670>  ` + message)
-            .setColor(`Purple`);
+            .setColor(`Fuchsia`);
 
     return embed;
 }

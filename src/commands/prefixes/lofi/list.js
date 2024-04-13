@@ -19,7 +19,7 @@ module.exports = {
         })
       )
       .setTimestamp()
-      .setColor("Random");
+      .setColor("Fuchsia");
 
     message.channel.send({ embeds: [embed] });
   },

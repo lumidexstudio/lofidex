@@ -35,7 +35,7 @@ module.exports = {
     let nowin = getCurrentlyPlayingTime(connection);
 
     let embed = new EmbedBuilder()
-        .setColor('Random')
+        .setColor('Fuchsia')
         .setTitle(detail.title + " by " + detail.author)
         .setURL(detail.source)
         .setThumbnail(detail.cover)

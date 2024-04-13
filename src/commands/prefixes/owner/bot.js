@@ -20,7 +20,7 @@ module.exports = {
 <:ramicon:1058972522441343078> **Penggunaan RAM:** ${usage.memory}GB
 <:cpu:1058972500505145414> **Penggunaan CPU:** ${usage.cpu}%`
       )
-      .setColor(Colors.LuminousVividPink);
+      .setColor(Colors.Fuchsia);
 
     return message.replyWithoutMention({ embeds: [embed] })
   },

@@ -23,7 +23,7 @@ module.exports = {
               { name: 'Category', value: inlineCode(info.category || 'none') },
               { name: 'Usage', value: inlineCode((message.used.prefix + info.name + ' ' + (info.args? info.args.join(' ') : '')).trim()) }
             )
-            .setColor('Purple');
+            .setColor('Fuchsia');
 
           let embeds = info.args ? [infoEmbed, noteEmbed(`If there is an argument like ${inlineCode('<argument?>')} at usage, This mean the argument are optional. Otherwise required argument will be marked like ${inlineCode('<argument>')}.`)] : [infoEmbed];
           return message.replyWithoutMention({ embeds })
@@ -46,7 +46,7 @@ module.exports = {
         });
 
         const embed = new EmbedBuilder({ fields })
-          .setColor('Random')
+          .setColor('Fuchsia')
           .setImage(`https://storage.lumidex.id/lofidex/image/embedsbanner.png`)
           .setDescription('Hellow, this bot is still in beta, and you may encounter some bugs. If you find any bugs, please report them with `ldxreport` command or join our support server... Your reports will really help the development of this bot ✨\n\nYou can use the `ldxhelp <command>` command to display information from the given command name.')
           .setAuthor({

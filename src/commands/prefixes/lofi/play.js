@@ -103,7 +103,7 @@ module.exports = {
       connection.subscribe(player);
       genMusic(message, player, connection);
 
-      let embed = new EmbedBuilder().setColor("Random").setAuthor({ name: "Loading" }).setDescription(italic("Preparing..."));
+      let embed = new EmbedBuilder().setColor("Fuchsia").setAuthor({ name: "Loading" }).setDescription(italic("Preparing..."));
       player.on(AudioPlayerStatus.Buffering, async () => {
         let song = connection.state.subscription.player.state.resource.metadata;
 
