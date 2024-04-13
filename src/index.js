@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const walk = require("./lib/walk");
 const toBoolean = require('./lib/toBoolean');
+const config = require("../config");
 
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
 const { QuickDB } = require("quick.db");
@@ -24,7 +25,7 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates],
 });
 
-client.config = require("../config");
+client.config = config;
 client.slash = new Collection();
 client.prefixes = new Collection();
 client.cooldowns = new Collection();
@@ -67,4 +68,4 @@ app.get("/", async (req, res) => {
 });
 
 app.listen(client.config.port, () => console.log("Server listen on port", client.config.port));
-client.login(client.config.token);
+client.login(client.config.token).then(() => client.user.setActivity(config.activity));
