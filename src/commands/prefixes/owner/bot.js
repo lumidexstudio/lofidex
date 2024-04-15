@@ -13,12 +13,12 @@ module.exports = {
     const embed = new EmbedBuilder()
       .setAuthor({ name: message.client.user.username + '#' + message.client.user.discriminator })
       .setThumbnail(`https://cdn.discordapp.com/avatars/${message.client.user.id}/${message.client.user.avatar}.png`)
-      .setDescription(`<:arrowup:1058777961089749073> **Uptime:** ${require('ms')(Number(message.client.uptime), { long: true })}
-<:shieldicon:1058255266090594372> **Total server:** ${message.client.guilds.cache.size}
-<:users:1058783082477518848> **Total pengguna:** ${message.client.guilds.cache.map(x => x.memberCount ?? 0).reduce((a, b) => a + b, 0)}
+      .setDescription(`**Uptime:** ${require('ms')(Number(message.client.uptime), { long: true })}
+**Total server:** ${message.client.guilds.cache.size}
+**Total pengguna:** ${message.client.guilds.cache.map(x => x.memberCount ?? 0).reduce((a, b) => a + b, 0)}
 
-<:ramicon:1058972522441343078> **Penggunaan RAM:** ${usage.memory}GB
-<:cpu:1058972500505145414> **Penggunaan CPU:** ${usage.cpu}%`
+**Penggunaan RAM:** ${usage.memory}GB
+**Penggunaan CPU:** ${usage.cpu}%`
       )
       .setColor(Colors.Fuchsia);
 

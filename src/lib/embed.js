@@ -1,8 +1,9 @@
 const { EmbedBuilder } = require("discord.js");
+const { emoji } = require('../../config')
 
 exports.errorEmbed = (message) => {
     const embed = new EmbedBuilder()
-            .setDescription("<:noentry:1058255404431310878> " + message)
+            .setDescription(`${emoji.noEntry} ` + message)
             .setColor("Red");
 
     return embed;
@@ -10,7 +11,7 @@ exports.errorEmbed = (message) => {
 
 exports.successEmbed = (message) => {
     const embed = new EmbedBuilder()
-            .setDescription("<:check:1058239965689040956> " + message)
+            .setDescription(`${emoji.check} ` + message)
             .setColor("Green");
 
     return embed;
@@ -18,7 +19,7 @@ exports.successEmbed = (message) => {
 
 exports.dieEmbed = (message) => {
     const embed = new EmbedBuilder()
-            .setDescription("<:skull1:1058236954673692722> " + message)
+            .setDescription(`${emoji.skull} ` + message)
             .setColor('Red');
 
     return embed;
@@ -26,7 +27,7 @@ exports.dieEmbed = (message) => {
 
 exports.noteEmbed = (message) => {
     let embed = new EmbedBuilder()
-            .setDescription(`<:lamp:1058246307749314620> ` + message)
+            .setDescription(`${emoji.info} ` + message)
             .setColor('Fuchsia');
 
     return embed;
@@ -34,7 +35,7 @@ exports.noteEmbed = (message) => {
 
 exports.loadingEmbed = (message) => {
     let embed = new EmbedBuilder()
-            .setDescription(`<:hourglassicon:1058763743565193227> ` + message)
+            .setDescription(`${emoji.hourglass} ` + message)
             .setColor(`Fuchsia`);
 
     return embed;
@@ -42,7 +43,7 @@ exports.loadingEmbed = (message) => {
 
 exports.infoEmbed = (message) => {
     let embed = new EmbedBuilder()
-            .setDescription(`<:spark:1058788075154710670>  ` + message)
+            .setDescription(`${emoji.sparkles} ` + message)
             .setColor(`Fuchsia`);
 
     return embed;

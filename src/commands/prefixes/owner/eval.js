@@ -5,7 +5,7 @@ const hastebin = require('../../../lib/hastebin');
 
 function clean(text) {
     return text
-        .replace(new RegExp(process.env.TOKEN, "g"), "[REDACTED]")
+        .replace(new RegExp(process.env.BOT_TOKEN, "g"), "[REDACTED]")
         .replace(/`/g, `\`${String.fromCharCode(8203)}`)
         .replace(/@/g, `@${String.fromCharCode(8203)}`);
 }
@@ -19,7 +19,6 @@ module.exports = {
             if(!code) return message.replyWithoutMention({ embeds: [errorEmbed('No code provided! use codeblock instead!')] })
             let isAsync = /--async$/.test(code);
             let toExec = isAsync ? code.replace(/--async$/, "") : code;
-            console.log(toExec)
             let evaled = require("util").inspect(await eval(isAsync ? `(async () => {\n${toExec}\n})()` : toExec), {
                 depth: 0
             });
