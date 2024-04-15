@@ -13,4 +13,12 @@ module.exports = {
     name: 'ldxhelp', 
     type: ActivityType.Listening 
   },
+  reportTo: {
+    guild: process.env.REPORT_TO_GUILD_ID,
+    channel: process.env.REPORT_TO_CHANNEL_ID,
+  },
+  errorTo: {
+    guild: process.env.ERROR_TO_GUILD_ID,
+    channel: process.env.ERROR_TO_CHANNEL_ID,
+  }
 };

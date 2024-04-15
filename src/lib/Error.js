@@ -6,9 +6,9 @@ module.exports = {
   name: Events.Error,
   async execute(error, message) {
     message.replyWithoutMention({ embeds: [dieEmbed("Oops.. There is something wrong, We're sorry for the inconvenience. This problem will be reported automatically to our support server!") ]});
-    const guild = message.client.guilds.cache.get("1221002195588354098");
+    const guild = message.client.guilds.cache.get(message.client.config.errorTo.guild);
     if (guild) {
-      const channel = guild.channels.cache.get("1228358782329819196");
+      const channel = guild.channels.cache.get(message.client.config.errorTo.channel);
       if (channel) {
         const embed = new EmbedBuilder()
           .setTitle(error.message)

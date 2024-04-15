@@ -23,7 +23,7 @@ module.exports = {
             )
             .setTimestamp();
 
-        const reportChannel = message.client.guilds.cache.get('1221002195588354098').channels.cache.get('1225651149105791076');
+        const reportChannel = message.client.guilds.cache.get(message.client.config.reportTo.guild).channels.cache.get(message.client.config.reportTo.channel);
         if (reportChannel) {
             reportChannel.send({ content: `<@${message.author.id}>`, embeds: [reportEmbed] });
             message.replyWithoutMention({ embeds: [successEmbed('Thanks for reporting! Our developers will check it as soon as possible!') ]});
