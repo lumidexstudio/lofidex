@@ -19,9 +19,5 @@ Usually, the best way to chill with friends online is with lofi songs and a wide
 
 ## Features
 
-<img src="https://storage.lumidex.id/lofidex/image/lofidex1.png" alt="section 1" />
-<img src="https://storage.lumidex.id/lofidex/image/lofidex2.png" alt="section 2" />
-<img src="https://storage.lumidex.id/lofidex/image/lofidex3.png" alt="section 3" />
-<img src="https://storage.lumidex.id/lofidex/image/lofidex4.png" alt="section 4" />
-<img src="https://storage.lumidex.id/lofidex/image/lofidex5.png" alt="section 5" />
+<img src="https://storage.lumidex.id/lofidex/image/lofidexfull.png" alt="features" />
 
