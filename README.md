@@ -1,6 +1,6 @@
 # Lofidex
 
-Usually, the best way to chill with friends online is with lofi songs and a wide selection of ambient background sounds that you can set on your favorite server.
+Usually, the best way to chill with friends online is with lofi songs and a wide selection of ambient background sounds that you can set on your favorite Discord server.
 
 > This bot is still under development, there may still be many problems in it. We are still developing this bot. Feel free to contribute.
 
