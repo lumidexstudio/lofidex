@@ -1,22 +1,17 @@
-const { createAudioPlayer } = require("@discordjs/voice");
-const { createAudioResource } = require("@discordjs/voice");
 const { successEmbed } = require("../../lib/embed");
-const list = require("../../lofi");
+const { playSong } = require("../audio/playbackEngine");
 
 const loop = async (message, player) => {
   let repeat = await message.client.db.get(`vc.${message.guild.id}.repeat`);
+  let ambients = await message.client.db.get(`vc.${message.guild.id}.ambients`);
 
-  const res = createAudioResource(repeat.path, {
-    metadata: {
-      ...repeat.song,
-      shouldSendEmbed: true,
-      index: list.findIndex((item) => item.title == repeat.song.title),
-    },
-    inlineVolume: true,
+  playSong(message.client, message.guild.id, player, repeat.song, {
+    ambientNames: ambients ?? [],
+    songIndex: repeat.song.index,
+    startOffsetSeconds: 0,
+    shouldSendEmbed: true,
   });
 
-
-  player.play(res);
   return message.replyWithoutMention({ embeds: [successEmbed(`Now repeating ${repeat.song.title}`)] });
 };
 

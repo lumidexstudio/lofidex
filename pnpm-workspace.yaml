@@ -1,0 +1,1 @@
+onlyBuiltDependencies: '["@discordjs/opus", "better-sqlite3", "ffmpeg-ffprobe-static", "@ffprobe-installer/darwin-arm64"]'

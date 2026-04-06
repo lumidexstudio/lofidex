@@ -6,6 +6,10 @@ const addAmbient = require("../../../lib/music/addAmbient");
 const removeAmbient = require("../../../lib/music/removeAmbient");
 const stopAllCollectors = require("../../../lib/stopAllCollectors");
 
+function formatAmbientList(items) {
+  return items.map((item) => `\`${item.name}\``).join(", ");
+}
+
 module.exports = {
   name: "add",
   description: "Adds ambient to the currently playing song.",
@@ -14,8 +18,8 @@ module.exports = {
   category: "lofi",
   args: ["<ambient?>"],
   async execute(message, args) {
-    let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);
-    if (!isplaying) return message.replyWithoutMention({ embeds: [errorEmbed("The bot is not playing music right now.")] });
+    let guildData = await message.client.db.get(`vc.${message.guild.id}`);
+    if (!guildData) return message.replyWithoutMention({ embeds: [errorEmbed("The bot is not playing music right now.")] });
 
     let host = await message.client.db.get(`vc.${message.guild.id}.master`);
 
@@ -28,6 +32,18 @@ module.exports = {
     if (args[0]) {
       addAmbient(message, connection, args[0]);
     } else {
+      if (ambientList.length > 25) {
+        return message.channel.send({
+          embeds: [
+            infoEmbed(
+              `Ambient library is too large for button mode.\n\nCurrent ambients: ${inlineCode(
+                getdb.ambients.length ? getdb.ambients.join("`, `") : "none"
+              )}\n\nUse \`${message.client.config.prefix}add <ambient-name>\` with one of these names:\n${formatAmbientList(ambientList)}`
+            ),
+          ],
+        });
+      }
+
       let btns = {};
       let ambientsNow = await message.client.db.get(`vc.${message.guild.id}.ambients`);
 

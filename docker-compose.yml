@@ -1,0 +1,10 @@
+services:
+  lofidex:
+    build: .
+    env_file: .env
+    volumes:
+      - lofidex-temp:/app/temp
+    restart: unless-stopped
+
+volumes:
+  lofidex-temp:

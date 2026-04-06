@@ -4,9 +4,10 @@ const path = require("node:path");
 const walk = require("./lib/walk");
 const toBoolean = require('./lib/toBoolean');
 const config = require("../config");
+const { ensureBinary } = require("./lib/audio/nativeMixer");
+const SimpleJsonDb = require("./lib/SimpleJsonDb");
 
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
-const { QuickDB } = require("quick.db");
 
 const express = require("express");
 const app = express();
@@ -29,7 +30,7 @@ client.config = config;
 client.slash = new Collection();
 client.prefixes = new Collection();
 client.cooldowns = new Collection();
-client.db = new QuickDB();
+client.db = new SimpleJsonDb(path.join(process.cwd(), "temp/quickdb.json"));
 client.ffmpeg = ffmpeg;
 
 // collector purposes
@@ -37,6 +38,7 @@ client.nowplaying = new Collection();
 client.addAmbient = new Collection();
 client.removeAmbient = new Collection();
 client.volume = new Collection();
+client.mixerSessions = new Map();
 
 const slashPath = path.join(__dirname, "commands/slash");
 walk(slashPath, (x) => {
@@ -67,5 +69,35 @@ app.get("/", async (req, res) => {
   res.status(200).json({ message: "Hello World" });
 });
 
-app.listen(client.config.port, () => console.log("Server listen on port", client.config.port));
-client.login(client.config.token).then(() => client.user.setActivity(config.activity));
+function startHttpServer() {
+  if (toBoolean(process.env.DISABLE_HTTP_SERVER)) {
+    console.log("HTTP server disabled by configuration.");
+    return;
+  }
+
+  const host = process.env.HOST ?? "127.0.0.1";
+  const server = app.listen(client.config.port, host, () => {
+    console.log(`Server listen on ${host}:${client.config.port}`);
+  });
+
+  server.on("error", (error) => {
+    console.error(`HTTP server disabled: ${error.code ?? error.message}`);
+  });
+}
+
+async function bootstrap() {
+  try {
+    console.log("Preparing native audio mixer...");
+    ensureBinary();
+    console.log("Native audio mixer ready.");
+
+    startHttpServer();
+    await client.login(client.config.token);
+    client.user.setActivity(config.activity);
+  } catch (error) {
+    console.error("Startup failed:", error.message);
+    process.exit(1);
+  }
+}
+
+bootstrap();

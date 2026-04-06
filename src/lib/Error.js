@@ -11,7 +11,7 @@ module.exports = {
       const channel = guild.channels.cache.get(message.client.config.errorTo.channel);
       if (channel) {
         const embed = new EmbedBuilder()
-          .setTitle(error.message)
+          .setTitle(error.message.length > 256 ? error.message.slice(0, 253) + "..." : error.message)
           .setThumbnail(message.author.displayAvatarURL())
           .setDescription(error.stack.length > 4096 ? await hastebin(error.stack) : codeBlock(`Stack Trace:\n${error.stack}`))
           .setColor("Red")

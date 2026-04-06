@@ -4,7 +4,7 @@ const { getVoiceConnection } = require('@discordjs/voice');
 const formatTime = require('../../../lib/formatTime');
 const getCurrentlyPlayingTime = require('../../../lib/getCurrentPlayingTime');
 const createProgressBar = require('../../../lib/createProgressBar');
-const { default: getAudioDurationInSeconds } = require('get-audio-duration');
+const { getAudioDuration } = require('../../../lib/audio/nativeMixer');
 const { ButtonBuilder, ButtonStyle } = require('discord.js');
 const { ActionRowBuilder, ComponentType } = require('discord.js');
 const { AudioPlayerStatus } = require('@discordjs/voice');
@@ -20,19 +20,65 @@ module.exports = {
   cooldown: 1,
   category: "lofi",
   async execute(message) {
-    let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);
-    if(!isplaying) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });
-    
-    let getdb = await message.client.db.get(`vc.${message.guild.id}`);
-    if (getdb.channel !== message.member.voice.channelId) return message.replyWithoutMention({ embeds: [errorEmbed(`We are not in the same voice channel!`)] });
+    let guildData = await message.client.db.get(`vc.${message.guild.id}`);
+    if (!guildData) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });
 
-    let detail = songlist[getdb.now];
+    if (guildData.channel !== message.member.voice.channelId) return message.replyWithoutMention({ embeds: [errorEmbed(`We are not in the same voice channel!`)] });
 
     let connection = await getVoiceConnection(message.guild.id);
-    if(!connection) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });
+    if (!connection) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });
 
-    let dur = await getAudioDurationInSeconds(detail.path);
-    let nowin = getCurrentlyPlayingTime(connection);
+    // Ambient-only mode — show ambient info
+    if (guildData.ambientOnly) {
+      const ambientNames = (guildData.ambients ?? []).map((n) => `\`${n}\``).join(", ");
+      let embed = new EmbedBuilder()
+        .setColor('Fuchsia')
+        .setTitle("Ambient Mode")
+        .setDescription(`Currently playing ambients:\n${ambientNames}`)
+        .setTimestamp();
+
+      let btns = {
+        stop: new ButtonBuilder().setCustomId('stop').setLabel('Stop').setEmoji("⏹").setStyle(ButtonStyle.Danger),
+      };
+
+      let row = new ActionRowBuilder().addComponents(btns.stop);
+      let msg = await message.channel.send({ embeds: [embed], components: [row] });
+
+      await stopAllCollectors(message);
+      let collector = message.channel.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 });
+      message.client.nowplaying.set(message.guild.id, collector);
+      collector.on("collect", async (d) => {
+        await d.deferUpdate();
+        if (d.user.id !== guildData.master) {
+          return d.followUp({ content: `${d.user.username}, only host can use this button.`, ephemeral: true });
+        }
+
+        if (d.customId === 'stop') {
+          collector.stop('disconnect');
+        }
+      });
+
+      collector.on('end', async (d, r) => {
+        if (r === 'disconnect') {
+          try {
+            await stop(connection, message);
+            message.replyWithoutMention({ embeds: [successEmbed(`Disconnected\n\nThank you for using this bot. We are aware that many issues still exist. Come join our ${hyperlink(bold('Support Server'), message.client.config.supportServer)} to get information, updates and more.`)] });
+          } catch {
+            console.log("err stop button now playing");
+          }
+        }
+      });
+      return;
+    }
+
+    // Normal song mode
+    let isplaying = await message.client.db.has(`vc.${message.guild.id}.now`);
+    if (!isplaying) return message.replyWithoutMention({ embeds: [errorEmbed('The bot is not playing music right now.')] });
+
+    let detail = songlist[guildData.now];
+
+    let dur = getAudioDuration(detail.path);
+    let nowin = getCurrentlyPlayingTime(connection, message.client, message.guild.id);
 
     let embed = new EmbedBuilder()
         .setColor('Fuchsia')
@@ -75,8 +121,8 @@ module.exports = {
           let now = await message.client.db.get(`vc.${message.guild.id}.now`);
           let detail = songlist[now];
 
-          let dur = await getAudioDurationInSeconds(detail.path);
-          let nowin = getCurrentlyPlayingTime(connection);
+          let dur = getAudioDuration(detail.path);
+          let nowin = getCurrentlyPlayingTime(connection, message.client, message.guild.id);
 
           embed.setTitle(detail.title + " by " + detail.author)
             .setURL(detail.source)
@@ -90,7 +136,7 @@ module.exports = {
       };
 
       await d.deferUpdate();
-      if(d.user.id !== getdb.master) {
+      if(d.user.id !== guildData.master) {
         return d.followUp({
           content: `${d.user.username}, only host can use this button.`,
           ephemeral: true,

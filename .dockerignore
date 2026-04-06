@@ -2,6 +2,9 @@
 .gitignore
 Dockerfile
 .dockerignore
+docker-compose.yml
 node_modules
 .env
 README.md
+temp/
+.DS_Store

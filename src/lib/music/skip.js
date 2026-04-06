@@ -1,7 +1,12 @@
-const { createAudioResource } = require("@discordjs/voice");
-const restoreAmbient = require("./restoreAmbient");
+const { playSong } = require("../audio/playbackEngine");
 
 async function skipMusic(message, player, shouldSendEmbed = true) {
+  let guildData = await message.client.db.get(`vc.${message.guild.id}`);
+  if (guildData?.ambientOnly) {
+    const { errorEmbed } = require("../embed");
+    return message.replyWithoutMention({ embeds: [errorEmbed("Cannot skip in ambient-only mode.")] });
+  }
+
   let list = require("../../lofi");
   let now = await message.client.db.get(`vc.${message.guild.id}.now`);
 
@@ -16,28 +21,12 @@ async function skipMusic(message, player, shouldSendEmbed = true) {
 
   let ambients = await message.client.db.get(`vc.${message.guild.id}.ambients`);
 
-  if (ambients.length > 0) {
-    restoreAmbient(
-      message,
-      list.findIndex((item) => item.title == song.title)
-    )
-      .then((res) => {
-        player.play(res);
-      })
-      .catch((error) => {
-        console.log(`[ERROR SKIP] ${error.message}`);
-      });
-  } else {
-    const res = createAudioResource(song.path, {
-      metadata: {
-        ...song,
-        shouldSendEmbed,
-        index: list.findIndex((item) => item.title == song.title),
-      },
-      inlineVolume: true,
-    });
-    player.play(res);
-  }
+  playSong(message.client, message.guild.id, player, song, {
+    ambientNames: ambients ?? [],
+    songIndex: list.findIndex((item) => item.title === song.title),
+    startOffsetSeconds: 0,
+    shouldSendEmbed,
+  });
 }
 
 module.exports = skipMusic;
