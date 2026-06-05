@@ -23,6 +23,14 @@ module.exports = {
     name: process.env.ACTIVITY_NAME || 'ldxhelp', 
     type: ActivityType[capitalizedEnvActivityType] ?? ActivityType.Listening 
   },
+  topgg: {
+    token: process.env.TOPGG_TOKEN,
+    botId: process.env.BOT_CLIENT_ID,
+    voteUrl: process.env.TOPGG_VOTE_URL || 'https://top.gg/bot/1221004354408939640/vote',
+  },
+  voice: {
+    emptyLeaveMs: Number(process.env.EMPTY_CHANNEL_LEAVE_MS) || 30000,
+  },
   reportTo: {
     guild: process.env.REPORT_TO_GUILD_ID,
     channel: process.env.REPORT_TO_CHANNEL_ID,

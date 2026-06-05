@@ -1,5 +1,6 @@
 const { REST, Routes, Events } = require('discord.js');
 const config = require('../../config');
+const restoreSessions = require('../lib/voice/restoreSessions');
 const rest = new REST({ version: 10 }).setToken(config.token);
 
 module.exports = {
@@ -22,6 +23,12 @@ module.exports = {
             console.log(`Successfully reloaded ${data.length} application (/) commands.`);
         } catch (error) {
             console.error(error);
+        }
+
+        try {
+            await restoreSessions(client);
+        } catch (error) {
+            console.error('Failed to restore 24/7 sessions:', error);
         }
 	},
 };

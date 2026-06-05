@@ -39,6 +39,7 @@ client.addAmbient = new Collection();
 client.removeAmbient = new Collection();
 client.volume = new Collection();
 client.mixerSessions = new Map();
+client.leaveTimers = new Map();
 
 const slashPath = path.join(__dirname, "commands/slash");
 walk(slashPath, (x) => {

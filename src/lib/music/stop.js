@@ -1,13 +1,9 @@
-const fs = require('fs');
-const { destroyGuildMixer } = require("../audio/playbackEngine");
+const leaveVoice = require("../voice/leaveVoice");
 
-const stop = async(connection, message) => {
-    destroyGuildMixer(message.client, message.guild.id);
-    connection.disconnect();
-    fs.rmSync(`temp/${message.guild.id}`, { recursive: true, force: true });
-    message.client.nowplaying.delete(message.guild.id);
-    
-    await message.client.db.delete(`vc.${message.guild.id}`);
-}
+// Kept the (connection, message) signature for existing callers (stop command,
+// nowplaying buttons); the actual teardown lives in leaveVoice.
+const stop = async (connection, message) => {
+  await leaveVoice(message.client, message.guild.id);
+};
 
 module.exports = stop;
