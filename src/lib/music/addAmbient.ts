@@ -41,7 +41,15 @@ const addAmbient = async (
     });
   }
 
-  const song = list[(player.state as { resource: { metadata: { index: number } } }).resource.metadata.index];
+  const resource = (player.state as { resource?: { metadata: { index: number } } }).resource;
+  if (!resource) {
+    console.warn(`[addAmbient] guild ${message.guild!.id}: no song resource available (player state: ${player.state.status}), but ambientOnly=false — treating as empty queue`);
+    return message.replyWithoutMention!({
+      embeds: [errorEmbed("No song is currently playing. Use `/play` first.")],
+    });
+  }
+
+  const song = list[resource.metadata.index];
   const startOffset = getCurrentlyPlayingTime(con, message.client, message.guild!.id);
   if (startOffset === null)
     return message.replyWithoutMention!({

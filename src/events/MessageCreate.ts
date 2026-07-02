@@ -84,7 +84,8 @@ export = {
     try {
       await cmd.execute(msg, args);
     } catch (error) {
-      console.error(`Error executing ${cmd.name}`);
+      const errorCtx = `guild=${message.guild?.id} user=${message.author.tag} cmd=${cmd.name} args=${args.join(" ")}`;
+      console.error(`[MessageCreate] Error executing ${cmd.name} (${errorCtx})`);
       await ErrorModule.execute(error as Error, msg as never);
       console.error(error);
     }
