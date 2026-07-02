@@ -16,7 +16,7 @@ RUN mkdir -p temp/native && \
     chmod 755 temp/native/audio_mixer
 
 # Prune dev dependencies
-RUN pnpm prune --prod
+RUN rm -rf node_modules && pnpm install --prod --frozen-lockfile
 
 # Stage 2: Runtime — slim image with ffmpeg only
 FROM node:22-bookworm-slim

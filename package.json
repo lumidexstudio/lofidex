@@ -1,5 +1,14 @@
 {
 	"main": "src/index.js",
+	"packageManager": "pnpm@9.15.9",
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@discordjs/opus",
+			"better-sqlite3",
+			"ffmpeg-ffprobe-static",
+			"@ffprobe-installer/darwin-arm64"
+		]
+	},
 	"scripts": {
 		"start": "node .",
 		"build:mixer": "clang++ native/audio_mixer.cpp -std=c++17 -O3 -DNDEBUG -o temp/native/audio_mixer"
