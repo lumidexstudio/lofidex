@@ -30,7 +30,18 @@ const addAmbient = async (message, con, argsAmbient) => {
             embeds: [(0, embed_1.successEmbed)("Ambient added successfully!")],
         });
     }
-    const song = lofi_1.default[player.state.resource.metadata.index];
+    const resource = player.state.resource;
+    if (!resource) {
+        getdb.ambientOnly = true;
+        await message.client.db.set(`vc.${message.guild.id}.ambientOnly`, true);
+        (0, playbackEngine_1.playAmbientOnly)(message.client, message.guild.id, player, getdb.ambients, {
+            shouldSendEmbed: false,
+        });
+        return message.replyWithoutMention({
+            embeds: [(0, embed_1.successEmbed)("Ambient added successfully!")],
+        });
+    }
+    const song = lofi_1.default[resource.metadata.index];
     const startOffset = (0, getCurrentPlayingTime_1.default)(con, message.client, message.guild.id);
     if (startOffset === null)
         return message.replyWithoutMention({

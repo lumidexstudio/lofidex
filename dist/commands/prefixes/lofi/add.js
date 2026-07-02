@@ -8,7 +8,9 @@ const discord_js_1 = require("discord.js");
 const embed_1 = require("../../../lib/embed");
 const addAmbient_1 = __importDefault(require("../../../lib/music/addAmbient"));
 const removeAmbient_1 = __importDefault(require("../../../lib/music/removeAmbient"));
-const stopAllCollectors_1 = __importDefault(require("../../../lib/stopAllCollectors"));
+const createButtonCollector_1 = __importDefault(require("../../../lib/createButtonCollector"));
+const playbackSession_1 = require("../../../lib/voice/playbackSession");
+const leaveVoice_1 = __importDefault(require("../../../lib/voice/leaveVoice"));
 function formatAmbientList(items) {
     return items.map((item) => `\`${item.name}\``).join(", ");
 }
@@ -21,12 +23,56 @@ module.exports = {
     args: ["<ambient?>"],
     async execute(message, args) {
         const guildData = (await message.client.db.get(`vc.${message.guild.id}`));
-        if (!guildData)
-            return message.replyWithoutMention({
-                embeds: [
-                    (0, embed_1.errorEmbed)("The bot is not playing music right now."),
-                ],
+        if (!guildData) {
+            if (!args[0]) {
+                return message.replyWithoutMention({
+                    embeds: [
+                        (0, embed_1.errorEmbed)("Specify an ambient name to start. Usage: `add <ambient>`"),
+                    ],
+                });
+            }
+            if (!ambient_sound_1.default.find((item) => item.name === args[0])) {
+                return message.replyWithoutMention({
+                    embeds: [(0, embed_1.errorEmbed)("Ambient not found! Use `ambients` to see available sounds.")],
+                });
+            }
+            const voiceChannelId = message.member.voice.channelId;
+            if (!voiceChannelId)
+                return message.replyWithoutMention({
+                    embeds: [(0, embed_1.errorEmbed)("You must be on a voice channel first!")],
+                });
+            const voiceChannel = message.guild.channels.cache.get(voiceChannelId);
+            if (!voiceChannel)
+                return message.replyWithoutMention({
+                    embeds: [(0, embed_1.errorEmbed)("Voice channel not found")],
+                });
+            const existingConnection = (0, voice_1.getVoiceConnection)(message.guild.id);
+            if (existingConnection && existingConnection.state.status !== voice_1.VoiceConnectionStatus.Destroyed) {
+                existingConnection.destroy();
+            }
+            await message.client.db.set(`vc.${message.guild.id}`, {
+                channel: voiceChannel.id,
+                master: message.member.user.id,
+                ambients: [args[0]],
+                ambientOnly: true,
+                stay247: false,
             });
+            try {
+                await (0, playbackSession_1.startPlaybackSession)(message.client, {
+                    guild: message.guild,
+                    voiceChannel: voiceChannel,
+                    textChannel: message.channel,
+                    announce: true,
+                });
+            }
+            catch {
+                await (0, leaveVoice_1.default)(message.client, message.guild.id);
+                return message.replyWithoutMention({
+                    embeds: [(0, embed_1.errorEmbed)("Failed to join the voice channel.")],
+                });
+            }
+            return;
+        }
         const getdb = (await message.client.db.get(`vc.${message.guild.id}`));
         if (getdb.master !== message.member.user.id)
             return message.replyWithoutMention({
@@ -84,26 +130,20 @@ module.exports = {
                     row = new discord_js_1.ActionRowBuilder();
                 }
             }
-            await (0, stopAllCollectors_1.default)(message);
-            const msg = await message.channel.send({
+            await (0, createButtonCollector_1.default)(message, {
+                key: "addAmbient",
+                masterId: getdb.master,
                 embeds: [
                     (0, embed_1.infoEmbed)(`Add some ambients? use the buttons below...\n\nCurrent ambients: ${(0, discord_js_1.inlineCode)(ambientsNow?.length ? ambientsNow.join("`, `") : "none")}`),
                 ],
                 components: rows,
-            });
-            const collector = message.channel.createMessageComponentCollector({
-                componentType: discord_js_1.ComponentType.Button,
-                time: 120000,
-            });
-            message.client.addAmbient.set(message.guild.id, collector);
-            collector.on("collect", async (d) => {
-                const set = async (x) => {
+                async onCollect(d, msg) {
                     const ambientsOld = await message.client.db.get(`vc.${message.guild.id}.ambients`);
-                    if (ambientsOld?.includes(x.customId.split("_")[1])) {
-                        await (0, removeAmbient_1.default)(message, connection, x.customId.split("_")[1]);
+                    if (ambientsOld?.includes(d.customId.split("_")[1])) {
+                        await (0, removeAmbient_1.default)(message, connection, d.customId.split("_")[1]);
                     }
                     else {
-                        await (0, addAmbient_1.default)(message, connection, x.customId.split("_")[1]);
+                        await (0, addAmbient_1.default)(message, connection, d.customId.split("_")[1]);
                     }
                     const ambientsNowDb = await message.client.db.get(`vc.${message.guild.id}.ambients`);
                     Object.keys(btns).forEach((key) => {
@@ -120,16 +160,7 @@ module.exports = {
                         ],
                         components: rows,
                     });
-                };
-                await d.deferUpdate();
-                if (d.user.id !== getdb.master) {
-                    await d.followUp({
-                        content: `${d.user.username}, only host can use this button.`,
-                        ephemeral: true,
-                    });
-                    return;
-                }
-                await set(d);
+                },
             });
         }
     },

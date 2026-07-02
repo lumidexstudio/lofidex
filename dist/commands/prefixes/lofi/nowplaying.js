@@ -12,7 +12,46 @@ const nativeMixer_1 = require("../../../lib/audio/nativeMixer");
 const skip_1 = __importDefault(require("../../../lib/music/skip"));
 const embed_1 = require("../../../lib/embed");
 const stop_1 = __importDefault(require("../../../lib/music/stop"));
-const stopAllCollectors_1 = __importDefault(require("../../../lib/stopAllCollectors"));
+const createButtonCollector_1 = __importDefault(require("../../../lib/createButtonCollector"));
+async function handleCollectorEnd(r, connection, message) {
+    if (r === "disconnect") {
+        try {
+            await (0, stop_1.default)(connection, message);
+            await message.replyWithoutMention({
+                embeds: [
+                    (0, embed_1.successEmbed)(`Disconnected\n\nThank you for using this bot. We are aware that many issues still exist. Come join our ${(0, discord_js_1.hyperlink)((0, discord_js_1.bold)("Support Server"), message.client.config.supportServer)} to get information, updates and more.`),
+                ],
+            });
+        }
+        catch {
+            console.log("err stop button now playing");
+        }
+    }
+}
+function ambientNowPlayingEmbed(ambientNames) {
+    return new discord_js_1.EmbedBuilder()
+        .setColor("Fuchsia")
+        .setTitle("Ambient Mode")
+        .setDescription(`Currently playing ambients:\n${ambientNames.map((n) => `\`${n}\``).join(", ")}`)
+        .setTimestamp();
+}
+function songNowPlayingEmbed(detail, nowin, dur) {
+    return new discord_js_1.EmbedBuilder()
+        .setColor("Fuchsia")
+        .setTitle(detail.title + " by " + detail.author)
+        .setURL(detail.source)
+        .setThumbnail(detail.cover)
+        .setDescription(`${(0, formatTime_1.default)(nowin)} ${(0, createProgressBar_1.default)(nowin, dur)} ${(0, formatTime_1.default)(dur)}`)
+        .setTimestamp()
+        .setFooter({ text: `Song ID: ${detail.id}` });
+}
+function buildSongButtons() {
+    return {
+        pause: new discord_js_1.ButtonBuilder().setCustomId("pause").setLabel("Pause").setEmoji("\u23F8").setStyle(discord_js_1.ButtonStyle.Secondary),
+        stop: new discord_js_1.ButtonBuilder().setCustomId("stop").setLabel("Stop").setEmoji("\u23F9").setStyle(discord_js_1.ButtonStyle.Danger),
+        skip: new discord_js_1.ButtonBuilder().setCustomId("skip").setLabel("Skip").setEmoji("\u23ED").setStyle(discord_js_1.ButtonStyle.Primary),
+    };
+}
 module.exports = {
     name: "nowplaying",
     description: "Get details of the currently playing song.",
@@ -35,50 +74,26 @@ module.exports = {
                 embeds: [(0, embed_1.errorEmbed)("The bot is not playing music right now.")],
             });
         if (guildData.ambientOnly) {
-            const ambientNames = (guildData.ambients ?? []).map((n) => `\`${n}\``).join(", ");
-            const embed = new discord_js_1.EmbedBuilder()
-                .setColor("Fuchsia")
-                .setTitle("Ambient Mode")
-                .setDescription(`Currently playing ambients:\n${ambientNames}`)
-                .setTimestamp();
+            const ambientNames = guildData.ambients ?? [];
             const btns = {
                 stop: new discord_js_1.ButtonBuilder().setCustomId("stop").setLabel("Stop").setEmoji("\u23F9").setStyle(discord_js_1.ButtonStyle.Danger),
             };
             const row = new discord_js_1.ActionRowBuilder().addComponents(btns.stop);
-            const msg = await message.channel.send({
-                embeds: [embed],
+            await (0, createButtonCollector_1.default)(message, {
+                key: "nowplaying",
+                masterId: guildData.master ?? null,
+                embeds: [ambientNowPlayingEmbed(ambientNames)],
                 components: [row],
-            });
-            await (0, stopAllCollectors_1.default)(message);
-            const collector = message.channel.createMessageComponentCollector({
-                componentType: discord_js_1.ComponentType.Button,
-                time: 120000,
-            });
-            message.client.nowplaying.set(message.guild.id, collector);
-            collector.on("collect", async (d) => {
-                await d.deferUpdate();
-                if (d.user.id !== guildData.master) {
-                    await d.followUp({ content: `${d.user.username}, only host can use this button.`, ephemeral: true });
-                    return;
-                }
-                if (d.customId === "stop") {
-                    collector.stop("disconnect");
-                }
-            });
-            collector.on("end", async (_d, r) => {
-                if (r === "disconnect") {
-                    try {
-                        await (0, stop_1.default)(connection, message);
-                        await message.replyWithoutMention({
-                            embeds: [
-                                (0, embed_1.successEmbed)(`Disconnected\n\nThank you for using this bot. We are aware that many issues still exist. Come join our ${(0, discord_js_1.hyperlink)((0, discord_js_1.bold)("Support Server"), message.client.config.supportServer)} to get information, updates and more.`),
-                            ],
-                        });
+                async onCollect(d) {
+                    if (d.customId === "stop") {
+                        const coll = message.client.nowplaying.get(message.guild.id);
+                        if (coll)
+                            coll.stop("disconnect");
                     }
-                    catch {
-                        console.log("err stop button now playing");
-                    }
-                }
+                },
+                async onEnd(r) {
+                    await handleCollectorEnd(r, connection, message);
+                },
             });
             return;
         }
@@ -90,34 +105,16 @@ module.exports = {
         let detail = lofi_1.default[guildData.now ?? 0];
         const dur = (0, nativeMixer_1.getAudioDuration)(detail.path);
         const nowin = (0, getCurrentPlayingTime_1.default)(connection, message.client, message.guild.id) ?? 0;
-        const embed = new discord_js_1.EmbedBuilder()
-            .setColor("Fuchsia")
-            .setTitle(detail.title + " by " + detail.author)
-            .setURL(detail.source)
-            .setThumbnail(detail.cover)
-            .setDescription(`${(0, formatTime_1.default)(nowin)} ${(0, createProgressBar_1.default)(nowin, dur)} ${(0, formatTime_1.default)(dur)}`)
-            .setTimestamp()
-            .setFooter({ text: `Song ID: ${detail.id}` });
-        const btns = {
-            pause: new discord_js_1.ButtonBuilder().setCustomId("pause").setLabel("Pause").setEmoji("\u23F8").setStyle(discord_js_1.ButtonStyle.Secondary),
-            stop: new discord_js_1.ButtonBuilder().setCustomId("stop").setLabel("Stop").setEmoji("\u23F9").setStyle(discord_js_1.ButtonStyle.Danger),
-            skip: new discord_js_1.ButtonBuilder().setCustomId("skip").setLabel("Skip").setEmoji("\u23ED").setStyle(discord_js_1.ButtonStyle.Primary),
-        };
+        const btns = buildSongButtons();
         const row = new discord_js_1.ActionRowBuilder().addComponents(btns.pause, btns.skip, btns.stop);
-        const msg = await message.channel.send({
-            embeds: [embed],
+        const msg = await (0, createButtonCollector_1.default)(message, {
+            key: "nowplaying",
+            masterId: guildData.master ?? null,
+            embeds: [songNowPlayingEmbed(detail, nowin, dur)],
             components: [row],
-        });
-        await (0, stopAllCollectors_1.default)(message);
-        const collector = message.channel.createMessageComponentCollector({
-            componentType: discord_js_1.ComponentType.Button,
-            time: 120000,
-        });
-        message.client.nowplaying.set(message.guild.id, collector);
-        collector.on("collect", async (d) => {
-            const set = async (x) => {
+            async onCollect(d) {
                 const player = connection.state.subscription.player;
-                if (x.customId === "pause") {
+                if (d.customId === "pause") {
                     const meta = player.state;
                     meta.resource.metadata.shouldSendEmbed = false;
                     if (player.state.status === voice_1.AudioPlayerStatus.Paused) {
@@ -129,51 +126,27 @@ module.exports = {
                         btns.pause.setStyle(discord_js_1.ButtonStyle.Primary).setLabel("Resume").setEmoji("\u25B6");
                     }
                 }
-                else if (x.customId === "stop") {
+                else if (d.customId === "stop") {
                     const coll = message.client.nowplaying.get(message.guild.id);
                     if (coll)
                         coll.stop("disconnect");
+                    return;
                 }
-                else if (x.customId === "skip") {
-                    await (0, skip_1.default)(message, connection.state.subscription.player, false);
+                else if (d.customId === "skip") {
+                    await (0, skip_1.default)(message, player, false);
                     const now = await message.client.db.get(`vc.${message.guild.id}.now`);
                     detail = lofi_1.default[now ?? 0];
                     const durNew = (0, nativeMixer_1.getAudioDuration)(detail.path);
                     const nowinNew = (0, getCurrentPlayingTime_1.default)(connection, message.client, message.guild.id) ?? 0;
-                    embed
-                        .setTitle(detail.title + " by " + detail.author)
-                        .setURL(detail.source)
-                        .setThumbnail(detail.cover)
-                        .setDescription(`${(0, formatTime_1.default)(nowinNew)} ${(0, createProgressBar_1.default)(nowinNew, durNew)} ${(0, formatTime_1.default)(durNew)}`)
-                        .setTimestamp()
-                        .setFooter({ text: `Song ID: ${detail.id}` });
+                    const embed = songNowPlayingEmbed(detail, nowinNew, durNew);
+                    await msg.edit({ embeds: [embed], components: [row] });
+                    return;
                 }
-                await msg.edit({
-                    embeds: [embed],
-                    components: [row],
-                });
-            };
-            await d.deferUpdate();
-            if (d.user.id !== guildData.master) {
-                await d.followUp({ content: `${d.user.username}, only host can use this button.`, ephemeral: true });
-                return;
-            }
-            await set(d);
-        });
-        collector.on("end", async (_d, r) => {
-            if (r === "disconnect") {
-                try {
-                    await (0, stop_1.default)(connection, message);
-                    await message.replyWithoutMention({
-                        embeds: [
-                            (0, embed_1.successEmbed)(`Disconnected\n\nThank you for using this bot. We are aware that many issues still exist. Come join our ${(0, discord_js_1.hyperlink)((0, discord_js_1.bold)("Support Server"), message.client.config.supportServer)} to get information, updates and more.`),
-                        ],
-                    });
-                }
-                catch {
-                    console.log("err stop button now playing");
-                }
-            }
+                await msg.edit({ embeds: [songNowPlayingEmbed(detail, (0, getCurrentPlayingTime_1.default)(connection, message.client, message.guild.id) ?? 0, (0, nativeMixer_1.getAudioDuration)(detail.path))], components: [row] });
+            },
+            async onEnd(r) {
+                await handleCollectorEnd(r, connection, message);
+            },
         });
     },
 };

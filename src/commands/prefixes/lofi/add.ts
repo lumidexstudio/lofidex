@@ -1,4 +1,4 @@
-import { getVoiceConnection } from "@discordjs/voice";
+import { getVoiceConnection, VoiceConnectionStatus } from "@discordjs/voice";
 import ambientList from "../../../ambient-sound";
 import {
   ActionRowBuilder,
@@ -7,6 +7,8 @@ import {
   inlineCode,
   type Message,
   type ButtonInteraction,
+  type VoiceBasedChannel,
+  type TextBasedChannel,
 } from "discord.js";
 import {
   errorEmbed,
@@ -15,6 +17,8 @@ import {
 import addAmbientFn from "../../../lib/music/addAmbient";
 import removeAmbientFn from "../../../lib/music/removeAmbient";
 import createButtonCollector from "../../../lib/createButtonCollector";
+import { startPlaybackSession } from "../../../lib/voice/playbackSession";
+import leaveVoice from "../../../lib/voice/leaveVoice";
 import type { MessageWithReply } from "../../../types";
 
 function formatAmbientList(
@@ -37,12 +41,63 @@ export = {
     const guildData = (await message.client.db.get(
       `vc.${message.guild!.id}`
     )) as Record<string, unknown> | null;
-    if (!guildData)
-      return message.replyWithoutMention!({
-        embeds: [
-          errorEmbed("The bot is not playing music right now."),
-        ],
+
+    if (!guildData) {
+      if (!args[0]) {
+        return message.replyWithoutMention!({
+          embeds: [
+            errorEmbed("Specify an ambient name to start. Usage: `add <ambient>`"),
+          ],
+        });
+      }
+
+      if (!ambientList.find((item) => item.name === args[0])) {
+        return message.replyWithoutMention!({
+          embeds: [errorEmbed("Ambient not found! Use `ambients` to see available sounds.")],
+        });
+      }
+
+      const voiceChannelId = (message.member as { voice: { channelId: string } }).voice.channelId;
+      if (!voiceChannelId)
+        return message.replyWithoutMention!({
+          embeds: [errorEmbed("You must be on a voice channel first!")],
+        });
+
+      const voiceChannel = message.guild!.channels.cache.get(voiceChannelId);
+      if (!voiceChannel)
+        return message.replyWithoutMention!({
+          embeds: [errorEmbed("Voice channel not found")],
+        });
+
+      const existingConnection = getVoiceConnection(message.guild!.id);
+      if (existingConnection && existingConnection.state.status !== VoiceConnectionStatus.Destroyed) {
+        existingConnection.destroy();
+      }
+
+      await message.client.db.set(`vc.${message.guild!.id}`, {
+        channel: voiceChannel.id,
+        master: message.member!.user.id,
+        ambients: [args[0]],
+        ambientOnly: true,
+        stay247: false,
       });
+
+      try {
+        await startPlaybackSession(message.client, {
+          guild: message.guild!,
+          voiceChannel: voiceChannel as VoiceBasedChannel,
+          textChannel: message.channel as TextBasedChannel,
+          announce: true,
+        });
+      } catch {
+        await leaveVoice(message.client, message.guild!.id);
+        return message.replyWithoutMention!({
+          embeds: [errorEmbed("Failed to join the voice channel.")],
+        });
+      }
+
+      return;
+    }
 
     const getdb = (await message.client.db.get(
       `vc.${message.guild!.id}`

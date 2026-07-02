@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 const voice_1 = require("@discordjs/voice");
 const discord_js_1 = require("discord.js");
 const embed_1 = require("../../../lib/embed");
-const stopAllCollectors_1 = __importDefault(require("../../../lib/stopAllCollectors"));
+const createButtonCollector_1 = __importDefault(require("../../../lib/createButtonCollector"));
 module.exports = {
     name: "volume",
     description: "Controls the volume of the music being played.",
@@ -69,34 +69,26 @@ module.exports = {
                     .setStyle(discord_js_1.ButtonStyle.Primary),
             };
             const volumeRow = new discord_js_1.ActionRowBuilder().addComponents(btns["20"], btns["40"], btns["60"], btns["80"], btns["100"]);
-            await (0, stopAllCollectors_1.default)(message);
-            const msg = await message.channel.send({
+            await (0, createButtonCollector_1.default)(message, {
+                key: "volume",
+                masterId: null,
                 embeds: [
                     (0, embed_1.infoEmbed)(`Current volume: ${(0, discord_js_1.inlineCode)(`${(volumeState.resource.volume.volume * 100).toFixed(0)}%`)}`),
                 ],
                 components: [volumeRow],
-            });
-            const collector = message.channel.createMessageComponentCollector({
-                componentType: discord_js_1.ComponentType.Button,
-                time: 120000,
-            });
-            message.client.volume.set(message.guild.id, collector);
-            collector.on("collect", async (d) => {
-                const set = async (x) => {
-                    volumeState.resource.volume.setVolume(Number(x.customId) / 100);
+                async onCollect(d, msg) {
+                    volumeState.resource.volume.setVolume(Number(d.customId) / 100);
                     Object.keys(btns).forEach((key) => {
                         btns[key].setStyle(discord_js_1.ButtonStyle.Secondary);
                     });
-                    btns[x.customId].setStyle(discord_js_1.ButtonStyle.Primary);
+                    btns[d.customId].setStyle(discord_js_1.ButtonStyle.Primary);
                     await msg.edit({
                         embeds: [
                             (0, embed_1.infoEmbed)(`Current volume: ${(0, discord_js_1.inlineCode)(`${(volumeState.resource.volume.volume * 100).toFixed(0)}%`)}`),
                         ],
                         components: [volumeRow],
                     });
-                };
-                await d.deferUpdate();
-                await set(d);
+                },
             });
             return;
         }

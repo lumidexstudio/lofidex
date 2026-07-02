@@ -32,11 +32,11 @@ module.exports = {
                 await channel.send({ embeds: [embed] });
             }
             else {
-                console.error(`Channel "${message.client.config.errorTo.channel}" is not a valid text channel`);
+                console.warn(`[ErrorHandler] Cannot report error — channel "${message.client.config.errorTo.channel}" is not a valid text channel in guild "${message.client.config.errorTo.guild}". origin guild=${message.guild?.id} user=${message.author.tag}`);
             }
         }
         else {
-            console.error(`Guild "${message.client.config.errorTo.guild}" not found`);
+            console.warn(`[ErrorHandler] Cannot report error — guild "${message.client.config.errorTo.guild}" is not in the client cache. origin guild=${message.guild?.id} user=${message.author.tag}`);
         }
     },
 };

@@ -16,7 +16,8 @@
 | Command | Description |
 |---------|-------------|
 | `247` | Keep the bot in the voice channel even when it |
-| `add` | Adds ambient to the currently playing song. |
+| `add` | Adds ambient to the currently playing song, or joins and starts ambient-only mode. |
+| `join` | Make the bot join your voice channel without playing anything. |
 | `ambients` | List all available ambient sounds by category. |
 | `list` | list of all song |
 | `nowplaying` | Get details of the currently playing song. |

@@ -43,9 +43,13 @@ const addAmbient = async (
 
   const resource = (player.state as { resource?: { metadata: { index: number } } }).resource;
   if (!resource) {
-    console.warn(`[addAmbient] guild ${message.guild!.id}: no song resource available (player state: ${player.state.status}), but ambientOnly=false — treating as empty queue`);
+    getdb.ambientOnly = true;
+    await message.client.db.set(`vc.${message.guild!.id}.ambientOnly`, true);
+    playAmbientOnly(message.client, message.guild!.id, player, getdb.ambients, {
+      shouldSendEmbed: false,
+    });
     return message.replyWithoutMention!({
-      embeds: [errorEmbed("No song is currently playing. Use `/play` first.")],
+      embeds: [successEmbed("Ambient added successfully!")],
     });
   }
 
