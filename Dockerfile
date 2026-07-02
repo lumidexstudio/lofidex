@@ -1,4 +1,4 @@
-# Stage 1: Builder — compile C++ mixer and install deps
+# Stage 1: Builder — compile C++ mixer, TypeScript, and install deps
 FROM node:22-bookworm AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends g++ python3 make && rm -rf /var/lib/apt/lists/*
@@ -14,6 +14,11 @@ COPY . .
 RUN mkdir -p temp/native && \
     g++ native/audio_mixer.cpp -std=c++17 -O3 -DNDEBUG -o temp/native/audio_mixer && \
     chmod 755 temp/native/audio_mixer
+
+# Compile TypeScript (keep dev deps for tsc)
+RUN npx tsc && \
+    cp -r src/ambient-sound/*/ dist/ambient-sound/ && \
+    cp src/lofi/*.mp3 dist/lofi/ 2>/dev/null; true
 
 # Prune dev dependencies
 RUN rm -rf node_modules && pnpm install --prod --frozen-lockfile
@@ -32,4 +37,4 @@ ENV USE_STATIC_FFMPEG=false
 ARG PORT
 EXPOSE ${PORT:-3000}
 
-CMD ["node", "src/index.js"]
+CMD ["node", "dist/index.js"]

@@ -1,5 +1,5 @@
 {
-	"main": "src/index.js",
+	"main": "dist/index.js",
 	"packageManager": "pnpm@9.15.9",
 	"pnpm": {
 		"onlyBuiltDependencies": [
@@ -11,6 +11,8 @@
 	},
 	"scripts": {
 		"start": "node .",
+		"dev": "tsx src/index.ts",
+		"build": "tsc && cp -r src/ambient-sound/*/ dist/ambient-sound/ && cp src/lofi/*.mp3 dist/lofi/",
 		"build:mixer": "clang++ native/audio_mixer.cpp -std=c++17 -O3 -DNDEBUG -o temp/native/audio_mixer"
 	},
 	"dependencies": {
@@ -26,5 +28,13 @@
 		"ms": "^2.1.3",
 		"opusscript": "^0.0.8",
 		"quick.db": "^9.1.7"
+	},
+	"devDependencies": {
+		"@types/express": "^5.0.6",
+		"@types/fluent-ffmpeg": "^2.1.28",
+		"@types/ms": "^2.1.0",
+		"@types/node": "^26.1.0",
+		"tsx": "^4.22.4",
+		"typescript": "^6.0.3"
 	}
 }

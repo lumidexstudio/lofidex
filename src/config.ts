@@ -1,0 +1,66 @@
+import dotenv from "dotenv";
+import { ActivityType } from "discord.js";
+import type { Config } from "./types";
+
+dotenv.config();
+
+const envActivityType = process.env.ACTIVITY_TYPE!.toLowerCase();
+const capitalizedEnvActivityType =
+  envActivityType.charAt(0).toUpperCase() + envActivityType.slice(1);
+
+let botPrefix: string[] = (process.env.BOT_PREFIX ?? "").split(", ");
+if (!botPrefix[0]) {
+  botPrefix = [
+    "lumi",
+    "lumi ",
+    "ldx",
+    "ldx ",
+    `<@${process.env.BOT_CLIENT_ID}>`,
+  ];
+}
+
+const config: Config = {
+  port: Number(process.env.PORT) || 3000,
+  token: process.env.BOT_TOKEN!,
+  clientID: process.env.BOT_CLIENT_ID!,
+  ownerID: process.env.BOT_OWNER_ID!.split(", "),
+  prefix: botPrefix,
+  hasteServer:
+    process.env.HASTE_SERVER || "https://haste.lumidex.id",
+  supportServer:
+    process.env.SUPPORT_SERVER || "https://discord.gg/b2hw59zVTx",
+  activity: {
+    name: process.env.ACTIVITY_NAME || "ldxhelp",
+    type:
+      ActivityType[capitalizedEnvActivityType as keyof typeof ActivityType] ??
+      ActivityType.Listening,
+  },
+  topgg: {
+    token: process.env.TOPGG_TOKEN ?? "",
+    botId: process.env.BOT_CLIENT_ID!,
+    voteUrl:
+      process.env.TOPGG_VOTE_URL ||
+      "https://top.gg/bot/1221004354408939640/vote",
+  },
+  voice: {
+    emptyLeaveMs: Number(process.env.EMPTY_CHANNEL_LEAVE_MS) || 30000,
+  },
+  reportTo: {
+    guild: process.env.REPORT_TO_GUILD_ID!,
+    channel: process.env.REPORT_TO_CHANNEL_ID!,
+  },
+  errorTo: {
+    guild: process.env.ERROR_TO_GUILD_ID!,
+    channel: process.env.ERROR_TO_CHANNEL_ID!,
+  },
+  emoji: {
+    noEntry: process.env.EMOJI_NO_ENTRY || ":no_entry:",
+    check: process.env.EMOJI_CHECK || ":white_check_mark:",
+    skull: process.env.EMOJI_SKULL || ":skull:",
+    info: process.env.EMOJI_INFO || ":information_source:",
+    hourglass: process.env.EMOJI_HOURGLASS || ":hourglass:",
+    sparkles: process.env.EMOJI_SPARKLES || ":sparkles:",
+  },
+};
+
+export = config;

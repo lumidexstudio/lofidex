@@ -1,0 +1,170 @@
+import { getVoiceConnection } from "@discordjs/voice";
+import ambientList from "../../../ambient-sound";
+import {
+  ActionRowBuilder,
+  ButtonStyle,
+  ButtonBuilder,
+  ComponentType,
+  inlineCode,
+  type Message,
+  type ButtonInteraction,
+} from "discord.js";
+import {
+  infoEmbed,
+  errorEmbed,
+} from "../../../lib/embed";
+import removeAmbientFn from "../../../lib/music/removeAmbient";
+import addAmbientFn from "../../../lib/music/addAmbient";
+import stopAllCollectors from "../../../lib/stopAllCollectors";
+import type { MessageWithReply } from "../../../types";
+
+function formatAmbientList(items: { name: string }[]): string {
+  return items.map((item) => `\`${item.name}\``).join(", ");
+}
+
+export = {
+  name: "remove",
+  description: "Removes ambient on the currently playing song.",
+  aliases: ["removeambient"],
+  cooldown: 1,
+  category: "lofi",
+  args: ["<ambient?>"],
+  async execute(message: MessageWithReply, args: string[]): Promise<unknown> {
+    const guildData = (await message.client.db.get(`vc.${message.guild!.id}`)) as Record<string, unknown> | null;
+    if (!guildData)
+      return message.replyWithoutMention!({
+        embeds: [errorEmbed("The bot is not playing music right now.")],
+      });
+
+    const getdb = (await message.client.db.get(`vc.${message.guild!.id}`)) as {
+      master: string;
+      channel: string;
+    };
+
+    if (getdb.master !== message.member!.user.id)
+      return message.replyWithoutMention!({
+        embeds: [errorEmbed("Only the DJ can control using this command.")],
+      });
+    if (
+      getdb.channel !==
+      (message.member as { voice: { channelId: string } }).voice.channelId
+    )
+      return message.replyWithoutMention!({
+        embeds: [errorEmbed("We are not in the same voice channel!")],
+      });
+
+    const connection = getVoiceConnection(message.guild!.id);
+    if (!connection)
+      return message.replyWithoutMention!({
+        embeds: [errorEmbed("The bot is not playing music right now.")],
+      });
+
+    const ambients = await message.client.db.get<string[]>(`vc.${message.guild!.id}.ambients`);
+
+    if (args[0]) {
+      if (!ambients?.length)
+        return message.replyWithoutMention!({
+          embeds: [errorEmbed("No ambients found!")],
+        });
+      await removeAmbientFn(message, connection, args[0]);
+    } else {
+      if (ambientList.length > 25) {
+        return (message.channel as unknown as { send: (opts: unknown) => Promise<unknown> }).send({
+          embeds: [
+            infoEmbed(
+              `Ambient library is too large for button mode.\n\nCurrent ambients: ${inlineCode(
+                ambients?.length ? ambients.join("`, `") : "none"
+              )}\n\nUse \`${message.client.config.prefix}remove <ambient-name>\` with one of these names:\n${formatAmbientList(ambientList)}`
+            ),
+          ],
+        });
+      }
+
+      const btns: Record<string, ButtonBuilder> = {};
+      const ambientsNow = await message.client.db.get<string[]>(`vc.${message.guild!.id}.ambients`);
+
+      const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+      let row = new ActionRowBuilder<ButtonBuilder>();
+
+      for (let i = 0; i < ambientList.length; i++) {
+        const ambient = ambientList[i];
+        btns[ambient.name] = new ButtonBuilder()
+          .setCustomId("remove_" + ambient.name)
+          .setLabel(ambient.name)
+          .setEmoji(ambient.emoji);
+
+        if (ambientsNow?.includes(ambient.name)) {
+          btns[ambient.name].setStyle(ButtonStyle.Primary);
+        } else {
+          btns[ambient.name].setStyle(ButtonStyle.Secondary);
+        }
+
+        row.addComponents(btns[ambient.name]);
+
+        if ((i + 1) % 5 === 0 || i === ambientList.length - 1) {
+          rows.push(row);
+          row = new ActionRowBuilder<ButtonBuilder>();
+        }
+      }
+
+      await stopAllCollectors(message as unknown as Message);
+      const msg = await (message.channel as unknown as { send: (opts: unknown) => Promise<unknown> }).send({
+        embeds: [
+          infoEmbed(
+            `Remove some ambients? use the buttons below...\n\nCurrent ambients: ${inlineCode(
+              ambientsNow?.length ? ambientsNow.join("`, `") : "none"
+            )}`
+          ),
+        ],
+        components: rows,
+      });
+      const collector = message.channel.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 120000,
+      });
+      message.client.removeAmbient.set(message.guild!.id, collector);
+      collector.on("collect", async (d: ButtonInteraction) => {
+        const set = async (x: ButtonInteraction) => {
+          const ambientsOld = await message.client.db.get<string[]>(`vc.${message.guild!.id}.ambients`);
+
+          if (ambientsOld?.includes(x.customId.split("_")[1])) {
+            await removeAmbientFn(message, connection, x.customId.split("_")[1]);
+          } else {
+            await addAmbientFn(message, connection, x.customId.split("_")[1]);
+          }
+
+          const ambientsNowDb = await message.client.db.get<string[]>(`vc.${message.guild!.id}.ambients`);
+          Object.keys(btns).forEach((key) => {
+            if (ambientsNowDb?.includes(key)) {
+              btns[key].setStyle(ButtonStyle.Primary);
+            } else {
+              btns[key].setStyle(ButtonStyle.Secondary);
+            }
+          });
+
+          await (msg as unknown as { edit: (opts: unknown) => Promise<unknown> }).edit({
+            embeds: [
+              infoEmbed(
+                `Add some ambients? use the buttons below...\n\nCurrent ambients: ${inlineCode(
+                  ambientsNowDb?.length ? ambientsNowDb.join("`, `") : "none"
+                )}`
+              ),
+            ],
+            components: rows,
+          });
+        };
+
+        await d.deferUpdate();
+        if (d.user.id !== getdb.master) {
+          await d.followUp({
+            content: `${d.user.username}, only host can use this button.`,
+            ephemeral: true,
+          });
+          return;
+        }
+
+        await set(d);
+      });
+    }
+  },
+};
