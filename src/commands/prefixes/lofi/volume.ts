@@ -7,16 +7,16 @@ import {
   ActionRowBuilder,
   ButtonStyle,
   ButtonBuilder,
-  ComponentType,
   inlineCode,
   type ButtonInteraction,
+  type Message,
 } from "discord.js";
 import {
   errorEmbed,
   infoEmbed,
   successEmbed,
 } from "../../../lib/embed";
-import stopAllCollectors from "../../../lib/stopAllCollectors";
+import createButtonCollector from "../../../lib/createButtonCollector";
 import type { MessageWithReply } from "../../../types";
 
 export = {
@@ -123,60 +123,40 @@ export = {
           btns["100"]
         );
 
-      await stopAllCollectors(message);
-      const msg = await (message.channel as unknown as { send: (opts: unknown) => Promise<unknown> }).send({
+      await createButtonCollector(message, {
+        key: "volume",
+        masterId: null,
         embeds: [
           infoEmbed(
             `Current volume: ${inlineCode(`${(volumeState.resource.volume.volume * 100).toFixed(0)}%`)}`
           ),
         ],
         components: [volumeRow],
+        async onCollect(d: ButtonInteraction, msg: Message) {
+          volumeState.resource.volume.setVolume(
+            Number(d.customId) / 100
+          );
+          Object.keys(btns).forEach(
+            (key) => {
+              btns[key].setStyle(
+                ButtonStyle.Secondary
+              );
+            }
+          );
+
+          btns[d.customId].setStyle(
+            ButtonStyle.Primary
+          );
+          await msg.edit({
+            embeds: [
+              infoEmbed(
+                `Current volume: ${inlineCode(`${(volumeState.resource.volume.volume * 100).toFixed(0)}%`)}`
+              ),
+            ],
+            components: [volumeRow],
+          });
+        },
       });
-      const collector =
-        message.channel.createMessageComponentCollector(
-          {
-            componentType: ComponentType.Button,
-            time: 120000,
-          }
-        );
-      message.client.volume.set(
-        message.guild!.id,
-        collector
-      );
-      collector.on(
-        "collect",
-        async (d: ButtonInteraction) => {
-          const set = async (
-            x: ButtonInteraction
-          ) => {
-            volumeState.resource.volume.setVolume(
-              Number(x.customId) / 100
-            );
-            Object.keys(btns).forEach(
-              (key) => {
-                btns[key].setStyle(
-                  ButtonStyle.Secondary
-                );
-              }
-            );
-
-            btns[x.customId].setStyle(
-              ButtonStyle.Primary
-            );
-            await (msg as unknown as { edit: (opts: unknown) => Promise<unknown> }).edit({
-              embeds: [
-                infoEmbed(
-                  `Current volume: ${inlineCode(`${(volumeState.resource.volume.volume * 100).toFixed(0)}%`)}`
-                ),
-              ],
-              components: [volumeRow],
-            });
-          };
-
-          await d.deferUpdate();
-          await set(d);
-        }
-      );
 
       return;
     } else {

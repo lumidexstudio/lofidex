@@ -4,7 +4,6 @@ import {
   ActionRowBuilder,
   ButtonStyle,
   ButtonBuilder,
-  ComponentType,
   inlineCode,
   type Message,
   type ButtonInteraction,
@@ -15,7 +14,7 @@ import {
 } from "../../../lib/embed";
 import addAmbientFn from "../../../lib/music/addAmbient";
 import removeAmbientFn from "../../../lib/music/removeAmbient";
-import stopAllCollectors from "../../../lib/stopAllCollectors";
+import createButtonCollector from "../../../lib/createButtonCollector";
 import type { MessageWithReply } from "../../../types";
 
 function formatAmbientList(
@@ -125,8 +124,9 @@ export = {
         }
       }
 
-      await stopAllCollectors(message as unknown as Message);
-      const msg = await (message.channel as unknown as { send: (opts: unknown) => Promise<unknown> }).send({
+      await createButtonCollector(message, {
+        key: "addAmbient",
+        masterId: getdb.master,
         embeds: [
           infoEmbed(
             `Add some ambients? use the buttons below...\n\nCurrent ambients: ${inlineCode(
@@ -135,22 +135,15 @@ export = {
           ),
         ],
         components: rows,
-      });
-      const collector = message.channel.createMessageComponentCollector({
-        componentType: ComponentType.Button,
-        time: 120000,
-      });
-      message.client.addAmbient.set(message.guild!.id, collector);
-      collector.on("collect", async (d: ButtonInteraction) => {
-        const set = async (x: ButtonInteraction) => {
+        async onCollect(d: ButtonInteraction, msg: Message) {
           const ambientsOld = await message.client.db.get<string[]>(
             `vc.${message.guild!.id}.ambients`
           );
 
-          if (ambientsOld?.includes(x.customId.split("_")[1])) {
-            await removeAmbientFn(message, connection, x.customId.split("_")[1]);
+          if (ambientsOld?.includes(d.customId.split("_")[1])) {
+            await removeAmbientFn(message, connection, d.customId.split("_")[1]);
           } else {
-            await addAmbientFn(message, connection, x.customId.split("_")[1]);
+            await addAmbientFn(message, connection, d.customId.split("_")[1]);
           }
 
           const ambientsNowDb = await message.client.db.get<string[]>(
@@ -164,7 +157,7 @@ export = {
             }
           });
 
-          await (msg as unknown as { edit: (opts: unknown) => Promise<unknown> }).edit({
+          await msg.edit({
             embeds: [
               infoEmbed(
                 `Add some ambients? use the buttons below...\n\nCurrent ambients: ${inlineCode(
@@ -174,18 +167,7 @@ export = {
             ],
             components: rows,
           });
-        };
-
-        await d.deferUpdate();
-        if (d.user.id !== getdb.master) {
-          await d.followUp({
-            content: `${d.user.username}, only host can use this button.`,
-            ephemeral: true,
-          });
-          return;
-        }
-
-        await set(d);
+        },
       });
     }
   },
